@@ -38,6 +38,6 @@ jobs:
       - name: Deploy to Azure Container Apps
         uses: azure/container-apps-deploy-action@v1
         with:
-          appName: stin-app
+          containerAppName: stin-app
           resourceGroup: my-app
           imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/my-app:latest
