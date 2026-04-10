@@ -8,8 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,8 +18,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build
-        run: mvn clean install
+      - name: Build backend
+        run: mvn clean package
         working-directory: backend
 
       - name: Login to ACR
@@ -35,3 +34,10 @@ jobs:
 
       - name: Push Docker image
         run: docker push ${{ secrets.ACR_LOGIN_SERVER }}/my-app:latest
+
+      - name: Deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appName: stin-app
+          resourceGroup: my-app
+          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/my-app:latest
