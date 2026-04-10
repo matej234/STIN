@@ -18,8 +18,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build backend
-        run: mvn clean package
+      - name: Build
+        run: mvn clean install
         working-directory: backend
 
       - name: Login to ACR
@@ -34,10 +34,3 @@ jobs:
 
       - name: Push Docker image
         run: docker push ${{ secrets.ACR_LOGIN_SERVER }}/my-app:latest
-
-      - name: Deploy to Azure Container Apps
-        uses: azure/container-apps-deploy-action@v1
-        with:
-          containerAppName: stin-app
-          resourceGroup: my-app
-          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/my-app:latest
