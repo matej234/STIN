@@ -8,6 +8,6 @@ public class hello {
 
     @GetMapping("/hello")
     public String Hello() {
-        return "snad uz plne funkci CI/CD pokus cislo 2";
+        return "snad uz plne funkci CI/CD pokus cislo 3";
     }
 }
