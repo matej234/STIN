@@ -10,4 +10,8 @@ public class hello {
     public String Hello() {
         return "snad uz plne funkci CI/CD pokus cislo 4";
     }
+    @GetMapping("/")
+    public String home() {
+        return "OK";
+    }
 }
