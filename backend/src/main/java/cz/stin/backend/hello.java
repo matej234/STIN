@@ -8,10 +8,10 @@ public class hello {
 
     @GetMapping("/hello")
     public String Hello() {
-        return "snad uz plne funkci CI/CD pokus cislo 4";
+        return "snad uz plne funkci CI/CD pokus cislo 5";
     }
     @GetMapping("/")
     public String home() {
-        return "OK";
+        return "OK podruhe ahaaa";
     }
 }
