@@ -46,6 +46,7 @@
 
 	<build>
 		<plugins>
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -57,7 +58,6 @@
 				<version>${jacoco.version}</version>
 
 				<executions>
-
 					<execution>
 						<id>prepare-agent</id>
 						<goals>
@@ -72,11 +72,10 @@
 							<goal>report</goal>
 						</goals>
 					</execution>
-
 				</executions>
 
 			</plugin>
+
 		</plugins>
 	</build>
-
 </project>
