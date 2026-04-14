@@ -11,9 +11,9 @@ public class Login {
     public String login(@RequestBody String username) {
 
         if (username != null && !username.isEmpty()) {
-            return "OK";
+            return username;
         }
 
-        return "FAIL";
+        return "";
     }
 }
