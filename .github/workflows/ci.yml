@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +25,18 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build & test
-        run: mvn clean install
+      - name: Build & test with coverage
+        run: mvn clean verify
         working-directory: backend
+
+      - name: Upload JaCoCo report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/target/site/jacoco
+
+      - name: Add coverage to PR
+        uses: madrapps/jacoco-report@v1.6.1
+        with:
+          paths: backend/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
