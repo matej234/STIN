@@ -26,8 +26,13 @@
         })
         .then(res => res.text())
         .then(data => {
-            document.getElementById("result").innerText = data;
-
+            if (data && data.length >0){
+                localStorage.setItem("username", data);
+                window.location.herf = "homee.html";
+            }
+            else {
+                document.getElementById("result").innerText = "Login fail";
+            }
             if (data === "OK") {
                 window.location.href = "home.html";
             }
