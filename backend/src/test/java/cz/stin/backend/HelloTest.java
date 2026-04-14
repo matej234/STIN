@@ -14,6 +14,6 @@ class HelloTest {
     @Test
     void testHome() {
         hello h = new hello();
-        assertEquals("OK podruhe ahaaa", h.home());
+        assertEquals("Snad uz posledni test CI/CD, pak login", h.home());
     }
 }

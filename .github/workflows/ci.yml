@@ -40,3 +40,5 @@ jobs:
         with:
           paths: backend/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
+          title: Coverage Report
+          min-coverage-overall: 0

@@ -12,6 +12,6 @@ public class hello {
     }
     @GetMapping("/")
     public String home() {
-        return "OK podruhe ahaaa";
+        return "Snad uz posledni test CI/CD, pak login";
     }
 }
