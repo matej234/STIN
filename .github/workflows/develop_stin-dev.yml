@@ -4,7 +4,7 @@
 name: Build and deploy JAR app to Azure Web App - stin-dev
 
 on:
-  pull_request:
+  push:
     branches:
       - develop
   workflow_dispatch:
