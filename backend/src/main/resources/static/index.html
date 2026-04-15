@@ -26,11 +26,10 @@
         })
         .then(res => res.text())
         .then(data => {
-            if (data && data.length >0){
-                localStorage.setItem("user", data);
+            if (data === "OK") {
+                localStorage.setItem("user", username);
                 window.location.href = "home.html";
-            }
-            else {
+            } else {
                 document.getElementById("result").innerText = "Login fail";
             }
         });
