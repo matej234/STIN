@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Home</title>
 </head>
 <body>
@@ -8,6 +9,11 @@
 <h1 id="welcome"></h1>
 
 <button onclick="logout()">Logout</button>
+
+<h3>Převod měn</h3>
+
+<select id="from"></select>
+<select id="to"></select>
 
 <script>
   const user = localStorage.getItem("user");
@@ -22,6 +28,23 @@
       localStorage.removeItem("user");
       window.location.href = "index.html";
   }
+
+  async function loadCurrencies() {
+      const res = await fetch("/api/currency/list");
+      const data = await res.json();
+
+      const currencies = data.currencies;
+
+      const from = document.getElementById("from");
+      const to = document.getElementById("to");
+
+      for (let code in currencies) {
+          from.add(new Option(code, code));
+          to.add(new Option(code, code));
+      }
+  }
+
+  loadCurrencies();
 </script>
 
 </body>
