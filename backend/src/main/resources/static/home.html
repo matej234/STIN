@@ -10,19 +10,11 @@
 
 <button onclick="logout()">Logout</button>
 
-<h3>Převod měn</h3>
+<h3>Analýza měn</h3>
 
-<select id="from"></select>
-<select id="to"></select>
+<select id="baseCurrency" onchange="recalculate()"></select>
 
-<br><br>
-
-<input type="number" id="amount" placeholder="Částka">
-<input type="number" id="result" placeholder="Výsledek" readonly>
-
-<br><br>
-
-<button onclick="convert()">Přepočítat</button>
+<div id="stats"></div>
 
 <script>
   const user = localStorage.getItem("user");
@@ -39,37 +31,66 @@
   }
 
   let rates = {};
+  let apiBase = "";
+  let selectedBase = "";
 
   async function init() {
       const res = await fetch("/api/currency/rates");
       const data = await res.json();
 
+      apiBase = data.source;
       rates = data.quotes;
 
-      const from = document.getElementById("from");
-      const to = document.getElementById("to");
+      const currencies = new Set();
+      currencies.add(apiBase);
 
       for (let key in rates) {
-          let currency = key.substring(3);
-
-          from.add(new Option(currency, currency));
-          to.add(new Option(currency, currency));
+          currencies.add(key.substring(3));
       }
+
+      const baseSelect = document.getElementById("baseCurrency");
+
+      for (let c of currencies) {
+          baseSelect.add(new Option(c, c));
+      }
+
+      selectedBase = apiBase;
+      recalculate();
   }
 
-  function convert() {
-      const from = document.getElementById("from").value;
-      const to = document.getElementById("to").value;
-      const amount = parseFloat(document.getElementById("amount").value);
+  function recalculate() {
+      selectedBase = document.getElementById("baseCurrency").value;
 
-      if (isNaN(amount)) return;
+      let strongest = null;
+      let weakest = null;
 
-      const rateFrom = rates["USD" + from];
-      const rateTo = rates["USD" + to];
+      for (let key in rates) {
+          const currency = key.substring(3);
 
-      const result = (amount / rateFrom) * rateTo;
+          if (currency === selectedBase) continue;
 
-      document.getElementById("result").value = result.toFixed(2);
+          let value;
+
+          if (selectedBase === apiBase) {
+              value = rates[key];
+          } else {
+              const baseToSelected = rates[apiBase + selectedBase];
+              value = rates[key] / baseToSelected;
+          }
+
+          if (!strongest || value < strongest.value) {
+              strongest = { currency, value };
+          }
+
+          if (!weakest || value > weakest.value) {
+              weakest = { currency, value };
+          }
+      }
+
+      document.getElementById("stats").innerHTML = `
+          <p><b>Nejsilnější:</b> 1 ${selectedBase} = ${strongest.value.toFixed(4)} ${strongest.currency}</p>
+          <p><b>Nejslabší:</b> 1 ${selectedBase} = ${weakest.value.toFixed(4)} ${weakest.currency}</p>
+      `;
   }
 
   init();
