@@ -8,11 +8,13 @@ import org.springframework.web.client.RestTemplate;
 @CrossOrigin
 public class CurrencyController {
 
-    private final String API_KEY = "2d5cba819cfc2e2a9f91df3356e88cf8";
+    private final String API_KEY = "b20811ab87e54b58f99600b4678693f4";
 
-    @GetMapping("/list")
-    public String list() {
-        String url = "https://api.exchangerate.host/list?access_key=" + API_KEY;
+    @GetMapping("/rates")
+    public String rates() {
+
+        String url = "https://api.exchangerate.host/live?access_key=" + API_KEY;
+
         return new RestTemplate().getForObject(url, String.class);
     }
 }
