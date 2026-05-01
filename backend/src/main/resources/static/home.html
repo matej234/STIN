@@ -15,6 +15,15 @@
 <select id="from"></select>
 <select id="to"></select>
 
+<br><br>
+
+<input type="number" id="amount" placeholder="Částka">
+<input type="number" id="result" placeholder="Výsledek" readonly>
+
+<br><br>
+
+<button onclick="convert()">Přepočítat</button>
+
 <script>
   const user = localStorage.getItem("user");
 
@@ -29,22 +38,41 @@
       window.location.href = "index.html";
   }
 
-  async function loadCurrencies() {
-      const res = await fetch("/api/currency/list");
+  let rates = {};
+
+  async function init() {
+      const res = await fetch("/api/currency/rates");
       const data = await res.json();
 
-      const currencies = data.currencies;
+      rates = data.quotes;
 
       const from = document.getElementById("from");
       const to = document.getElementById("to");
 
-      for (let code in currencies) {
-          from.add(new Option(code, code));
-          to.add(new Option(code, code));
+      for (let key in rates) {
+          let currency = key.substring(3);
+
+          from.add(new Option(currency, currency));
+          to.add(new Option(currency, currency));
       }
   }
 
-  loadCurrencies();
+  function convert() {
+      const from = document.getElementById("from").value;
+      const to = document.getElementById("to").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+
+      if (isNaN(amount)) return;
+
+      const rateFrom = rates["USD" + from];
+      const rateTo = rates["USD" + to];
+
+      const result = (amount / rateFrom) * rateTo;
+
+      document.getElementById("result").value = result.toFixed(2);
+  }
+
+  init();
 </script>
 
 </body>
