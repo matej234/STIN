@@ -17,4 +17,19 @@ public class CurrencyController {
 
         return new RestTemplate().getForObject(url, String.class);
     }
+
+    @GetMapping("/timeframe")
+    public String timeframe(
+            @RequestParam String start_date,
+            @RequestParam String end_date
+    ) {
+
+        String url =
+                "https://api.exchangerate.host/timeframe"
+                        + "?access_key=" + API_KEY
+                        + "&start_date=" + start_date
+                        + "&end_date=" + end_date;
+
+        return new RestTemplate().getForObject(url, String.class);
+    }
 }
