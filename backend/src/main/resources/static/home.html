@@ -18,23 +18,45 @@
   <h4>Base měna</h4>
   <select id="baseCurrency" onchange="recalculate()"></select>
 
-  <h4>Měny</h4>
-  <div id="currencyList"></div>
+  <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:15px;">
 
-  <hr>
+    <div style="flex:1; min-width:300px;">
+      <h4>Měny</h4>
+      <div id="currencyList" style="
+        max-height:260px;
+        overflow-y:auto;
+        border:1px solid #ddd;
+        border-radius:8px;
+        padding:10px;
+        background:#fafafa;
+      "></div>
+    </div>
 
-  <h4>Timeframe base měna</h4>
+    <div style="flex:1; min-width:300px;">
+      <h4>Timeframe měny</h4>
+      <div id="timeframeCurrencies" style="
+        max-height:260px;
+        overflow-y:auto;
+        border:1px solid #ddd;
+        border-radius:8px;
+        padding:10px;
+        background:#fafafa;
+      "></div>
+    </div>
+
+  </div>
+
+  <h4 style="margin-top:20px;">Timeframe base měna</h4>
   <select id="timeframeBase"></select>
 
-  <h4>Timeframe měny</h4>
-  <div id="timeframeCurrencies"></div>
+  <div style="margin-top:15px;">
+    <input type="date" id="start">
+    <input type="date" id="end">
 
-  <br>
-
-  <input type="date" id="start">
-  <input type="date" id="end">
-
-  <button onclick="loadTimeframe()">Načíst období</button>
+    <button onclick="loadTimeframe()" style="margin-left:10px;">
+      Načíst období
+    </button>
+  </div>
 
   <hr>
 
