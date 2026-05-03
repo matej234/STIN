@@ -14,6 +14,13 @@
 
 <select id="baseCurrency" onchange="recalculate()"></select>
 <select id="currencyList" multiple size="5" onchange="recalculate()"></select>
+<h4>Timeframe base měna</h4>
+<select id="timeframeBase"></select>
+<h4>Timeframe měny</h4>
+<select id="timeframeCurrencies" multiple size="5"></select>
+<input type="date" id="start">
+<input type="date" id="end">
+<button onclick="loadTimeframe()">Načíst období</button>
 
 <div id="stats"></div>
 
@@ -33,58 +40,65 @@
 
   let rates = {};
   let apiBase = "";
-  let selectedBase = "";
+
 
   async function init() {
-      const res = await fetch("/api/currency/rates");
-      const data = await res.json();
+    const res = await fetch("/api/currency/rates");
+    const data = await res.json();
 
-      apiBase = data.source;
-      rates = data.quotes;
-      rates[apiBase + apiBase] = 1;
-      const baseSelect = document.getElementById("baseCurrency");
-      const list = document.getElementById("currencyList");
+    apiBase = data.source;
+    rates = data.quotes;
 
-      const currencies = new Set();
+    const baseSelect = document.getElementById("baseCurrency");
+    const list = document.getElementById("currencyList");
+    const tfList = document.getElementById("timeframeCurrencies");
+    const tfBase = document.getElementById("timeframeBase");
 
-      for (let key in rates) {
-          currencies.add(key.substring(3));
-      }
 
-      const sortedCurrencies = Array.from(currencies).sort();
+    const currencies = new Set();
 
-      for (let c of sortedCurrencies) {
-          baseSelect.add(new Option(c, c));
-          list.add(new Option(c, c));
-      }
+    for (let key in rates) {
+        currencies.add(key.substring(3));
+    }
+    currencies.add(apiBase);
+    const sorted = Array.from(currencies).sort();
 
-      if ([...currencies].includes("CZK")) {
-          baseSelect.value = "CZK";
-          selectedBase = "CZK";
-      } else {
-          baseSelect.value = apiBase;
-          selectedBase = apiBase;
-      }
+    for (let c of sorted) {
+        baseSelect.add(new Option(c, c));
+        list.add(new Option(c, c));
+        tfList.add(new Option(c, c));
+        tfBase.add(new Option(c, c));
+    }
 
-      const defaults = ["USD", "EUR", "GBP"];
+    baseSelect.value = apiBase;
+    tfBase.value = apiBase;
+    const defaults = ["USD", "EUR", "GBP"];
 
-      for (let option of list.options) {
-          if (defaults.includes(option.value)) {
-              option.selected = true;
-          }
-      }
+    for (let opt of list.options) {
+        if (defaults.includes(opt.value)) opt.selected = true;
+    }
 
-      recalculate();
+    for (let opt of tfList.options) {
+        if (defaults.includes(opt.value)) opt.selected = true;
+    }
+
+    recalculate();
   }
+
 
   function getSelectedCurrencies() {
-      const select = document.getElementById("currencyList");
-      return Array.from(select.selectedOptions).map(opt => opt.value);
+      return Array.from(document.getElementById("currencyList").selectedOptions)
+          .map(o => o.value);
   }
 
-  function recalculate() {
-      selectedBase = document.getElementById("baseCurrency").value;
+  function getRate(currency) {
+      if (currency === apiBase) return 1;
+      return rates[apiBase + currency];
+  }
 
+
+  function recalculate() {
+      const selectedBase = document.getElementById("baseCurrency").value;
       const selectedCurrencies = getSelectedCurrencies();
 
       if (selectedCurrencies.length === 0) {
@@ -92,27 +106,17 @@
           return;
       }
 
+      const baseRate = getRate(selectedBase);
+
       let strongest = null;
       let weakest = null;
-
       let output = "";
 
       for (let currency of selectedCurrencies) {
 
           if (currency === selectedBase) continue;
 
-          let value;
-
-          if (selectedBase === apiBase) {
-              value = rates[apiBase + currency];
-          } else {
-              const baseToSelected = rates[apiBase + selectedBase];
-              if (!baseToSelected) continue;
-
-              value = rates[apiBase + currency] / baseToSelected;
-          }
-
-          if (!value) continue;
+          const value = getRate(currency) / baseRate;
 
           output += `<p>1 ${selectedBase} = ${value.toFixed(4)} ${currency}</p>`;
 
@@ -125,19 +129,89 @@
           }
       }
 
-      if (!strongest || !weakest) {
-          document.getElementById("stats").innerHTML = "Nelze spočítat data";
-          return;
-      }
-
       document.getElementById("stats").innerHTML = `
-          <h4>Výsledky:</h4>
+          <h4>Aktuální porovnání</h4>
           <p><b>Nejsilnější:</b> 1 ${selectedBase} = ${strongest.value.toFixed(4)} ${strongest.currency}</p>
           <p><b>Nejslabší:</b> 1 ${selectedBase} = ${weakest.value.toFixed(4)} ${weakest.currency}</p>
           <hr>
           ${output}
       `;
   }
+
+
+  async function loadTimeframe() {
+      const start = document.getElementById("start").value;
+      const end = document.getElementById("end").value;
+
+      if (!start || !end) {
+          document.getElementById("stats").innerHTML = "Vyber start i end datum";
+          return;
+      }
+
+      const res = await fetch(`/api/currency/timeframe?start_date=${start}&end_date=${end}`);
+      const data = await res.json();
+
+      analyzeTimeframe(data.quotes);
+  }
+
+  function analyzeTimeframe(quotes) {
+
+      const selected = getTimeframeCurrencies();
+      const base = document.getElementById("timeframeBase").value;
+      if (!quotes || Object.keys(quotes).length === 0) {
+          document.getElementById("stats").innerHTML = "Žádná data";
+          return;
+      }
+
+      if (selected.length === 0) {
+          document.getElementById("stats").innerHTML = "Vyber měny";
+          return;
+      }
+
+      const series = {};
+
+      for (const date in quotes) {
+          const day = quotes[date];
+
+          for (const key in day) {
+              const currency = key.substring(3);
+
+              if (!selected.includes(currency)) continue;
+
+              if (!series[currency]) series[currency] = [];
+
+              const baseRate = base === apiBase ? 1 : day[apiBase + base];
+              const currencyRate = day[apiBase + currency];
+
+              if (!baseRate || !currencyRate) continue;
+
+              const value = currencyRate / baseRate;
+
+              series[currency].push(value);
+          }
+      }
+
+      const averages = {};
+      let output = "";
+
+      for (const c in series) {
+          const arr = series[c];
+          const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+
+          averages[c] = avg;
+          output += `<p>${c} průměr: ${avg.toFixed(4)}</p>`;
+      }
+
+      document.getElementById("stats").innerHTML = `
+          <h4>Průměry za období</h4>
+          ${output}
+      `;
+  }
+  function getTimeframeCurrencies() {
+    const select = document.getElementById("timeframeCurrencies");
+    return Array.from(select.selectedOptions).map(opt => opt.value);
+  }
+
 
   init();
 </script>
