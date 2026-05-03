@@ -1,0 +1,10 @@
+{
+  "source": "USD",
+  "quotes": {
+    "USDEUR": 0.92,
+    "USDGBP": 0.78,
+    "USDCZK": 23.1,
+    "USDAUD": 1.52,
+    "USDJPY": 150.4
+  }
+}
