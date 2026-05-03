@@ -13,6 +13,7 @@
 <h3>Analýza měn</h3>
 
 <select id="baseCurrency" onchange="recalculate()"></select>
+<select id="currencyList" multiple size="5" onchange="recalculate()"></select>
 
 <div id="stats"></div>
 
@@ -40,43 +41,80 @@
 
       apiBase = data.source;
       rates = data.quotes;
+      rates[apiBase + apiBase] = 1;
+      const baseSelect = document.getElementById("baseCurrency");
+      const list = document.getElementById("currencyList");
 
       const currencies = new Set();
-      currencies.add(apiBase);
 
       for (let key in rates) {
           currencies.add(key.substring(3));
       }
 
-      const baseSelect = document.getElementById("baseCurrency");
+      const sortedCurrencies = Array.from(currencies).sort();
 
-      for (let c of currencies) {
+      for (let c of sortedCurrencies) {
           baseSelect.add(new Option(c, c));
+          list.add(new Option(c, c));
       }
 
-      selectedBase = apiBase;
+      if ([...currencies].includes("CZK")) {
+          baseSelect.value = "CZK";
+          selectedBase = "CZK";
+      } else {
+          baseSelect.value = apiBase;
+          selectedBase = apiBase;
+      }
+
+      const defaults = ["USD", "EUR", "GBP"];
+
+      for (let option of list.options) {
+          if (defaults.includes(option.value)) {
+              option.selected = true;
+          }
+      }
+
       recalculate();
+  }
+
+  function getSelectedCurrencies() {
+      const select = document.getElementById("currencyList");
+      return Array.from(select.selectedOptions).map(opt => opt.value);
   }
 
   function recalculate() {
       selectedBase = document.getElementById("baseCurrency").value;
 
+      const selectedCurrencies = getSelectedCurrencies();
+
+      if (selectedCurrencies.length === 0) {
+          document.getElementById("stats").innerHTML = "Vyber alespoň jednu měnu";
+          return;
+      }
+
       let strongest = null;
       let weakest = null;
 
-      for (let key in rates) {
-          const currency = key.substring(3);
+      let output = "";
+
+      for (let currency of selectedCurrencies) {
 
           if (currency === selectedBase) continue;
 
           let value;
 
           if (selectedBase === apiBase) {
-              value = rates[key];
+              value = rates[apiBase + currency];
           } else {
               const baseToSelected = rates[apiBase + selectedBase];
-              value = rates[key] / baseToSelected;
+              if (!baseToSelected) continue;
+
+              value = rates[apiBase + currency] / baseToSelected;
           }
+
+          if (!value) continue;
+
+          output += `<p>1 ${selectedBase} = ${value.toFixed(4)} ${currency}</p>`;
 
           if (!strongest || value < strongest.value) {
               strongest = { currency, value };
@@ -87,9 +125,17 @@
           }
       }
 
+      if (!strongest || !weakest) {
+          document.getElementById("stats").innerHTML = "Nelze spočítat data";
+          return;
+      }
+
       document.getElementById("stats").innerHTML = `
+          <h4>Výsledky:</h4>
           <p><b>Nejsilnější:</b> 1 ${selectedBase} = ${strongest.value.toFixed(4)} ${strongest.currency}</p>
           <p><b>Nejslabší:</b> 1 ${selectedBase} = ${weakest.value.toFixed(4)} ${weakest.currency}</p>
+          <hr>
+          ${output}
       `;
   }
 
