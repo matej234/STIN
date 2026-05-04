@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read #This is required for actions/checkout
 
@@ -35,7 +35,7 @@ jobs:
           path: backend/target/*.jar
 
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: build
     permissions:
       id-token: write #This is required for requesting the JWT
@@ -62,3 +62,11 @@ jobs:
           slot-name: 'Production'
           package: '*.jar'
           
+      - name: Set App Settings (API KEY)
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az webapp config appsettings set \
+              --name st1n2026 \
+              --resource-group skupina \
+              --settings EXCHANGE_API_KEY="${{ secrets.EXCHANGE_API_KEY }}"
