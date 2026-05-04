@@ -3,25 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <title>Home</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      transition: 0.2s;
+    }
+
+    body.dark {
+      background: #121212;
+      color: #e6e6e6;
+    }
+
+    #mainBox {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      position: relative;
+      transition: 0.2s;
+    }
+
+    body.dark #mainBox {
+      background: #1f1f1f;
+    }
+
+    body.dark h1,
+    body.dark h2,
+    body.dark h3,
+    body.dark h4,
+    body.dark p,
+    body.dark label {
+      color: #e6e6e6;
+    }
+
+    body.dark #currencyList,
+    body.dark #timeframeCurrencies,
+    body.dark #statsContainer {
+      background: #1f1f1f !important;
+      border: 1px solid #333 !important;
+    }
+
+    body.dark #currencyList label,
+    body.dark #timeframeCurrencies label {
+      color: #e6e6e6;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      cursor: pointer;
+      font-size: 18px;
+      background: #eee;
+      z-index: 1000;
+    }
+
+    body.dark .theme-toggle {
+      background: #333;
+      color: white;
+    }
+
+    body.dark select,
+    body.dark input {
+      background: #2a2a2a;
+      color: #e6e6e6;
+      border: 1px solid #444;
+    }
+
+    body.dark input[type="date"] {
+      color-scheme: dark;
+    }
+
+    body.dark button {
+      background: #333;
+      color: #e6e6e6;
+      border: 1px solid #444;
+    }
+
+    body.dark button:hover {
+      background: #444;
+    }
+
+  </style>
 </head>
 
-<body style="margin:0; font-family: Arial, sans-serif; background:#f4f6f8;">
+<body>
 
-<div style="max-width:900px; margin:40px auto; padding:20px; background:white; border-radius:12px;">
+<button class="theme-toggle" onclick="toggleDark()">🌙</button>
 
+<div id="mainBox">
   <h1 id="welcome"></h1>
-
-  <button onclick="logout()">Logout</button>
 
   <h2>Analýza měn</h2>
 
-  <h4>Base měna</h4>
+  <h4>Základní měna</h4>
   <select id="baseCurrency" onchange="recalculate()"></select>
 
   <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:15px;">
 
     <div style="flex:1; min-width:300px;">
-      <h4>Měny</h4>
+      <h4>Výběr měn</h4>
       <div id="currencyList" style="
         max-height:260px;
         overflow-y:auto;
@@ -33,7 +128,7 @@
     </div>
 
     <div style="flex:1; min-width:300px;">
-      <h4>Timeframe měny</h4>
+      <h4>Výběr měn (období)</h4>
       <div id="timeframeCurrencies" style="
         max-height:260px;
         overflow-y:auto;
@@ -46,7 +141,7 @@
 
   </div>
 
-  <h4 style="margin-top:20px;">Timeframe base měna</h4>
+  <h4 style="margin-top:20px;">Základní měna pro období</h4>
   <select id="timeframeBase"></select>
 
   <div style="margin-top:15px;">
@@ -57,21 +152,11 @@
       Načíst období
     </button>
   </div>
-
   <hr>
 
-  <div id="statsContainer" style="
-    margin-top:20px;
-    max-height:300px;
-    overflow-y:auto;
-    border:1px solid #ddd;
-    border-radius:8px;
-    padding:10px;
-    background:#fff;
-  "></div>
+  <div id="statsContainer"></div>
 
 </div>
-
 <script>
   const DEV_MODE = location.hostname === "localhost";
 
@@ -206,8 +291,8 @@
 
     document.getElementById("statsContainer").innerHTML = `
       <h4>Aktuální porovnání</h4>
-      <p><b>Nejsilnější:</b> 1 ${base} = ${strongest.value.toFixed(4)} ${strongest.currency}</p>
-      <p><b>Nejslabší:</b> 1 ${base} = ${weakest.value.toFixed(4)} ${weakest.currency}</p>
+      <p><b>Nejsilnější měna:</b> 1 ${base} = ${strongest.value.toFixed(4)} ${strongest.currency}</p>
+      <p><b>Nejslabší měna:</b> 1 ${base} = ${weakest.value.toFixed(4)} ${weakest.currency}</p>
       <hr>
       ${output}
     `;
@@ -293,6 +378,27 @@
 
     document.getElementById("statsContainer").innerHTML = html;
   }
+  function toggleDark() {
+    document.body.classList.toggle("dark");
+
+    const btn = document.querySelector(".theme-toggle");
+
+    if (document.body.classList.contains("dark")) {
+        btn.innerText = "☀️";
+        localStorage.setItem("theme", "dark");
+    } else {
+        btn.innerText = "🌙";
+        localStorage.setItem("theme", "light");
+    }
+    }
+
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.classList.add("dark");
+      setTimeout(() => {
+          document.querySelector(".theme-toggle").innerText = "☀️";
+      }, 0);
+  }
+
 
   init();
 </script>
