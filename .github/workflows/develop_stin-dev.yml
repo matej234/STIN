@@ -62,4 +62,13 @@ jobs:
           app-name: 'stin-dev'
           slot-name: 'Production'
           package: '*.jar'
+
+      - name: Set App Settings (API KEY)
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az webapp config appsettings set \
+              --name stin-dev \
+              --resource-group skupina \
+              --settings EXCHANGE_API_KEY="${{ secrets.EXCHANGE_API_KEY }}"
           
