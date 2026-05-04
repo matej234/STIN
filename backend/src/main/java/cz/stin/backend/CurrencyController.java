@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 @CrossOrigin
 public class CurrencyController {
 
-    @Value("${EXCHANGE_API_KEY}")
+    @Value("${EXCHANGE_API_KEY:dummy}")
     private String API_KEY;
 
     @GetMapping("/rates")
