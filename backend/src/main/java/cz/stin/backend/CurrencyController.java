@@ -2,13 +2,14 @@ package cz.stin.backend;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-
+import org.springframework.beans.factory.annotation.Value;
 @RestController
 @RequestMapping("/api/currency")
 @CrossOrigin
 public class CurrencyController {
 
-    private final String API_KEY = "b20811ab87e54b58f99600b4678693f4";
+    @Value("${EXCHANGE_API_KEY}")
+    private String API_KEY;
 
     @GetMapping("/rates")
     public String rates() {
