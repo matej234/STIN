@@ -42,7 +42,7 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"X\",\"password\":\"MATEJ\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
+                .andExpect(jsonPath("$.status").value("FAIL"));
     }
 
     @Test
@@ -51,7 +51,7 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
+                .andExpect(jsonPath("$.status").value("FAIL"));
     }
     @Test
     void login_null_username() throws Exception {
@@ -59,7 +59,7 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"MATEJ\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
+                .andExpect(jsonPath("$.status").value("FAIL"));
     }
 
     @Test
@@ -68,6 +68,6 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"Matěj\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
+                .andExpect(jsonPath("$.status").value("FAIL"));
     }
 }
