@@ -179,3 +179,18 @@ window.loadTimeframe = async function () {
 
     analyzeTimeframe(data?.quotes);
 };
+
+function analyzeTimeframe(quotes) {
+
+    const dates = Object.keys(quotes).sort();
+    const pairs = Object.keys(quotes[dates[0]] || {});
+
+    for (const pair of pairs) {
+
+        const values = dates
+            .map(d => quotes[d]?.[pair])
+            .filter(v => v != null);
+
+        console.log(`${pair}:`, values);
+    }
+}
