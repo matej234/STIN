@@ -1,4 +1,3 @@
-const DEV_MODE = location.hostname === "localhost";
 
 let rates = {};
 let apiBase = "";
@@ -31,10 +30,11 @@ async function init() {
 }
 
 async function fetchData() {
-    if (location.hostname === "localhost") {
-        return await (await fetch("/data/rates.json")).json();
-    }
-    return await (await fetch("/api/currency/rates")).json();
+    return await fetch("/api/currency/rates").then(r => r.json());
+}
+async function fetchTimeframe(start, end) {
+    return await fetch(`/api/currency/timeframe?start_date=${start}&end_date=${end}`)
+        .then(r => r.json());
 }
 
 function buildUI(sorted) {
@@ -46,7 +46,7 @@ function buildUI(sorted) {
 
     if (!baseSelect || !tfBase || !currencyList || !tfList) return;
 
-    const defaults = ["USD","EUR","GBP"];
+    const defaults = ["USD", "EUR", "GBP"];
 
     baseSelect.innerHTML = "";
     tfBase.innerHTML = "";
@@ -87,14 +87,10 @@ function buildUI(sorted) {
 
 function getRate(currency) {
     if (currency === apiBase) return 1;
-
-    const key = apiBase + currency;
-    const value = rates[key];
-
-    return value ?? null;
+    return rates[apiBase + currency] ?? null;
 }
 
-window.recalculate = function () {
+window.recalculate = async function () {
 
     const base = document.getElementById("baseCurrency")?.value;
     if (!base) return;
@@ -104,78 +100,58 @@ window.recalculate = function () {
 
     if (!selected.length) return;
 
-    const baseRate = (base === apiBase)
-        ? 1
-        : getRate(base);
+    const res = await fetch("/api/currency/compare", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            base,
+            apiBase,
+            selected,
+            rates
+        })
+    });
 
-    if (!baseRate) return;
+    const data = await res.json();
 
-    let strongest = null;
-    let weakest = null;
+    render(data);
+};
+
+function render(data) {
 
     let html = `
-    <div style="
-        max-height: 300px;
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-    ">
-    <table style="width:100%; border-collapse:collapse;">
-    <tr>
-      <th style="text-align:left;">Měna</th>
-      <th style="text-align:left;">Kurz</th>
-    </tr>
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <th style="text-align:left;">Měna</th>
+                <th style="text-align:left;">Kurz</th>
+            </tr>
     `;
 
-    for (const c of selected) {
-
-        const rateC = rates[apiBase + c] ?? (c === apiBase ? 1 : null);
-        const rateB = rates[apiBase + base] ?? (base === apiBase ? 1 : null);
-
-        let value;
-
-        if (!rateC || !rateB) {
-            value = null;
-        } else {
-            value = rateC / rateB;
-        }
-
+    for (const r of data.rates) {
         html += `
-        <tr>
-          <td>${c}</td>
-          <td>
-            ${value === null
-                ? "—"
-                : `1 ${base} = ${value.toFixed(4)} ${c}`
-            }
-          </td>
-        </tr>
+            <tr>
+                <td>${r.currency}</td>
+                <td>1 ${data.base} = ${r.value.toFixed(4)} ${r.currency}</td>
+            </tr>
         `;
-
-        if (value === null) continue;
-
-        if (!strongest || value < strongest.value)
-            strongest = { c, value };
-
-        if (!weakest || value > weakest.value)
-            weakest = { c, value };
     }
-    html += `
-    </table>
-    </div>
-    `;
+
+    html += `</table>`;
 
     const out = document.getElementById("statsContainer");
 
-    if (strongest && weakest) {
+    if (!out) return;
+
+    if (data.strongest && data.weakest) {
         out.innerHTML = `
             <h4>Aktuální porovnání</h4>
 
-            <p><b>Nejsilnější:</b> ${strongest.c}</p>
-            <p>1 ${base} = ${strongest.value.toFixed(4)} ${strongest.c}</p>
+            <p><b>Nejsilnější:</b> ${data.strongest.currency}</p>
+            <p>1 ${data.base} = ${data.strongest.value.toFixed(4)} ${data.strongest.currency}</p>
 
-            <p><b>Nejslabší:</b> ${weakest.c}</p>
-            <p>1 ${base} = ${weakest.value.toFixed(4)} ${weakest.c}</p>
+            <p><b>Nejslabší:</b> ${data.weakest.currency}</p>
+            <p>1 ${data.base} = ${data.weakest.value.toFixed(4)} ${data.weakest.currency}</p>
 
             <hr>
             ${html}
@@ -183,83 +159,23 @@ window.recalculate = function () {
     } else {
         out.innerHTML = "<p>Žádná data k výpočtu</p>";
     }
-};
+}
 
 window.loadTimeframe = async function () {
 
     const start = document.getElementById("start")?.value;
     const end = document.getElementById("end")?.value;
 
-    if (!start || !end) return;
+    console.log("start/end:", start, end);
+
+    if (!start || !end) {
+        console.log("missing dates");
+        return;
+    }
 
     const data = await fetchTimeframe(start, end);
 
+    console.log("response:", data);
+
     analyzeTimeframe(data?.quotes);
 };
-
-async function fetchTimeframe(start, end) {
-
-    if (location.hostname === "localhost") {
-        return await (await fetch("/data/timeframe.json")).json();
-    }
-
-    return await (await fetch(
-        `/api/currency/timeframe?start_date=${start}&end_date=${end}`
-    )).json();
-}
-
-function analyzeTimeframe(quotes) {
-
-    const selected = [...document.querySelectorAll("#timeframeCurrencies input:checked")]
-        .map(el => el.value);
-
-    const base = document.getElementById("timeframeBase")?.value;
-
-    if (!quotes || !selected.length || !base) return;
-
-    const series = {};
-
-    for (const date in quotes) {
-        const day = quotes[date];
-
-        for (const c of selected) {
-
-            const rate = (c === apiBase)
-                ? 1
-                : day[apiBase + c];
-
-            const baseRate = (base === apiBase)
-                ? 1
-                : day[apiBase + base];
-
-            if (!rate || !baseRate) continue;
-
-            const value = rate / baseRate;
-
-            if (!series[c]) series[c] = [];
-            series[c].push(value);
-        }
-    }
-
-    let html = `
-        <h4>Průměry za období</h4>
-        <table style="width:100%; border-collapse:collapse;">
-        <tr><th>Měna</th><th>Průměr</th></tr>
-    `;
-
-    for (const c in series) {
-        const arr = series[c];
-        const avg = arr.reduce((a,b) => a + b, 0) / arr.length;
-
-        html += `
-            <tr>
-              <td>${c}</td>
-              <td>${avg.toFixed(4)}</td>
-            </tr>
-        `;
-    }
-
-    html += `</table>`;
-
-    document.getElementById("statsContainer").innerHTML = html;
-}
