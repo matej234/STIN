@@ -177,18 +177,27 @@ window.loadTimeframe = async function () {
 
     console.log("response:", data);
 
-    analyzeTimeframe(data?.quotes);
+    analyzeTimeframe(data?.rates || data);
 };
 
-function analyzeTimeframe(quotes) {
+function analyzeTimeframe(rates) {
 
-    const dates = Object.keys(quotes).sort();
-    const pairs = Object.keys(quotes[dates[0]] || {});
+    if (!rates) {
+        console.log("no rates");
+        return;
+    }
+
+    const dates = Object.keys(rates).sort();
+    const firstDay = rates[dates[0]];
+
+    if (!firstDay) return;
+
+    const pairs = Object.keys(firstDay).filter(k => k.length <= 3);
 
     for (const pair of pairs) {
 
         const values = dates
-            .map(d => quotes[d]?.[pair])
+            .map(d => rates[d]?.[pair])
             .filter(v => v != null);
 
         console.log(`${pair}:`, values);
