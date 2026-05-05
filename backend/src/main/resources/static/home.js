@@ -85,6 +85,15 @@ function buildUI(sorted) {
     }
 }
 
+function getRate(currency) {
+    if (currency === apiBase) return 1;
+
+    const key = apiBase + currency;
+    const value = rates[key];
+
+    return value ?? null;
+}
+
 window.recalculate = function () {
 
     const base = document.getElementById("baseCurrency")?.value;
@@ -95,7 +104,11 @@ window.recalculate = function () {
 
     if (!selected.length) return;
 
-    const baseRate = rates[apiBase + base];
+    const baseRate = (base === apiBase)
+        ? 1
+        : getRate(base);
+
+    if (!baseRate) return;
 
     let strongest = null;
     let weakest = null;
@@ -116,19 +129,30 @@ window.recalculate = function () {
 
     for (const c of selected) {
 
-        if (c === base) continue;
+        const rateC = rates[apiBase + c] ?? (c === apiBase ? 1 : null);
+        const rateB = rates[apiBase + base] ?? (base === apiBase ? 1 : null);
 
-        const rate = rates[apiBase + c];
-        if (!rate || !baseRate) continue;
+        let value;
 
-        const value = rate / baseRate;
+        if (!rateC || !rateB) {
+            value = null;
+        } else {
+            value = rateC / rateB;
+        }
 
         html += `
         <tr>
           <td>${c}</td>
-          <td>1 ${base} = ${value.toFixed(4)}</td>
+          <td>
+            ${value === null
+                ? "—"
+                : `1 ${base} = ${value.toFixed(4)} ${c}`
+            }
+          </td>
         </tr>
         `;
+
+        if (value === null) continue;
 
         if (!strongest || value < strongest.value)
             strongest = { c, value };
@@ -136,7 +160,6 @@ window.recalculate = function () {
         if (!weakest || value > weakest.value)
             weakest = { c, value };
     }
-
     html += `
     </table>
     </div>
@@ -201,8 +224,13 @@ function analyzeTimeframe(quotes) {
 
         for (const c of selected) {
 
-            const rate = day[apiBase + c];
-            const baseRate = day[apiBase + base];
+            const rate = (c === apiBase)
+                ? 1
+                : day[apiBase + c];
+
+            const baseRate = (base === apiBase)
+                ? 1
+                : day[apiBase + base];
 
             if (!rate || !baseRate) continue;
 
