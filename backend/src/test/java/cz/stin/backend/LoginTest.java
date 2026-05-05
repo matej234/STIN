@@ -23,7 +23,8 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"Matěj\",\"password\":\"MATEJ\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("OK"));
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.username").value("Matěj"));
     }
 
     @Test
@@ -32,7 +33,7 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"Matěj\",\"password\":\"wrong\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
+                .andExpect(jsonPath("$.status").value("FAIL"));
     }
 
     @Test
