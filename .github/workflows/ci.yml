@@ -13,8 +13,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +27,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build & test with coverage
+      - name: Build & test
         run: mvn clean verify
         working-directory: backend
 
@@ -36,9 +38,9 @@ jobs:
           path: backend/target/site/jacoco
 
       - name: Add coverage to PR
+        if: github.event_name == 'pull_request'
         uses: madrapps/jacoco-report@v1.6.1
         with:
           paths: backend/target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           title: Coverage Report
-          min-coverage-overall: 0
