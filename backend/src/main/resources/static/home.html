@@ -45,41 +45,41 @@
 <body>
 
 <div id="mainBox">
+
   <h1 id="welcome"></h1>
 
-  <h2>Analýza měn</h2>
+  <button onclick="toggleLang()" data-key="langToggle"></button>
+
+  <h2 data-key="analysis"></h2>
+
   <button class="theme-toggle" id="themeBtn">🌙</button>
 
-  <h4>Základní měna</h4>
+  <h4 data-key="baseCurrency"></h4>
   <select id="baseCurrency"></select>
 
   <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:15px;">
 
     <div style="flex:1; min-width:300px;">
-      <h4>Výběr měn</h4>
+      <h4 data-key="currencySelection"></h4>
       <div id="currencyList"></div>
     </div>
 
     <div style="flex:1; min-width:300px;">
-      <h4>Výběr měn (období)</h4>
+      <h4 data-key="timeframeSelection"></h4>
       <div id="timeframeCurrencies"></div>
     </div>
 
   </div>
 
-  <h4 style="margin-top:20px;">Základní měna pro období</h4>
+  <h4 style="margin-top:20px;" data-key="baseCurrency"></h4>
   <select id="timeframeBase"></select>
 
   <div style="margin-top:15px;">
     <input type="date" id="start">
     <input type="date" id="end">
 
-    <button onclick="loadTimeframe()">
-      Načíst období
-    </button>
-    <button onclick="saveSettings()">
-      Uložit nastavení
-    </button>
+    <button onclick="loadTimeframe()" data-key="load"></button>
+    <button onclick="saveSettings()" data-key="save"></button>
   </div>
 
   <hr>
@@ -89,6 +89,8 @@
   <div id="timeframeContainer"></div>
 
 </div>
+
+<script src="language.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="home.js" defer></script>
 <script src="theme.js"></script>
