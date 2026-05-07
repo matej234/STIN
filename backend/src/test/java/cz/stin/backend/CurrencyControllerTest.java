@@ -35,8 +35,8 @@ class CurrencyControllerTest {
     void timeframe_works() throws Exception {
         mockMvc.perform(get("/api/currency/timeframe")
                         .param("base", "EUR")
-                        .param("start_date", "2024-01-01")
-                        .param("end_date", "2024-01-10"))
+                        .param("startDate", "2024-01-01")
+                        .param("endDate", "2024-01-10"))
                 .andExpect(status().isOk());
     }
 
