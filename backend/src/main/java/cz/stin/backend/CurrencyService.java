@@ -29,7 +29,12 @@ public class CurrencyService {
         double weakestValue = Double.MAX_VALUE;
 
         for (String currency : selectedCurrencies) {
+
             currency = currency.trim();
+
+            if (!AllowedCurrencies.LIST.contains(currency)) {
+                continue;
+            }
 
             if (!sourceRates.containsKey(currency)) {
                 continue;
@@ -64,7 +69,16 @@ public class CurrencyService {
 
     public Set<String> getCurrencies(CurrencyApiResponse apiData) {
         Map<String, Double> sourceRates = normalizeQuotes(apiData);
-        return sourceRates.keySet();
+
+        Set<String> result = new LinkedHashSet<>();
+
+        for (String currency : sourceRates.keySet()) {
+            if (AllowedCurrencies.LIST.contains(currency)) {
+                result.add(currency);
+            }
+        }
+
+        return result;
     }
 
     private Map<String, Double> normalizeQuotes(CurrencyApiResponse apiData) {
@@ -118,6 +132,10 @@ public class CurrencyService {
             for (String currency : selectedCurrencies) {
 
                 currency = currency.trim();
+
+                if (!AllowedCurrencies.LIST.contains(currency)) {
+                    continue;
+                }
 
                 if (!normalizedDay.containsKey(currency)) {
                     continue;
@@ -178,6 +196,10 @@ public class CurrencyService {
             }
 
             String currency = key.substring(3);
+
+            if (!AllowedCurrencies.LIST.contains(currency)) {
+                continue;
+            }
 
             result.put(currency, entry.getValue());
         }
