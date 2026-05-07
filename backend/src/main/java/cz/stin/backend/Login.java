@@ -8,20 +8,26 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 @CrossOrigin
 public class Login {
 
-    private final String HASHED_PASSWORD = BCrypt.hashpw("MATEJ", BCrypt.gensalt());
+    private final String USERNAME = "Matěj";
+    private final String PASSWORD_HASH =
+            BCrypt.hashpw("MATEJ", BCrypt.gensalt());
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest req) {
+    public LoginResponse login(@RequestBody LoginRequest req) {
 
-        if (req.username == null || req.password == null) {
-            return "FAIL";
+        if (req == null ||
+                req.username == null || req.username.isBlank() ||
+                req.password == null || req.password.isBlank()) {
+            return new LoginResponse(false, "Nezadané kompletní přihlašovací údaje");
         }
 
-        if (req.username.equals("Matěj") &&
-                BCrypt.checkpw(req.password, HASHED_PASSWORD)) {
-            return "OK";
+        boolean userOk = req.username.equals(USERNAME);
+        boolean passOk = BCrypt.checkpw(req.password, PASSWORD_HASH);
+
+        if (userOk && passOk) {
+            return new LoginResponse(true, "OK");
         }
 
-        return "FAIL";
+        return new LoginResponse(false, "Neplatné přihlašovací údaje");
     }
 }

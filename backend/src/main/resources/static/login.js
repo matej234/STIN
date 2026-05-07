@@ -11,13 +11,13 @@ async function login() {
         body: JSON.stringify({ username, password })
     });
 
-    const data = await res.text();
+    const data = await res.json();
 
-    if (data === "OK") {
+    if (data.success) {
         localStorage.setItem("user", username);
         window.location.href = "home.html";
     } else {
-        document.getElementById("result").innerText = "Špatné jméno nebo heslo";
+        document.getElementById("result").innerText = data.message;
     }
 }
 

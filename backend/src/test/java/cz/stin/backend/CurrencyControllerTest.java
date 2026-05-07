@@ -19,21 +19,29 @@ class CurrencyControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    void rates_endpoint_works() throws Exception {
-        mockMvc.perform(get("/api/currency/rates"))
+    void analyze_works() throws Exception {
+        mockMvc.perform(get("/api/currency/analyze")
+                        .param("base", "EUR"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void timeframe_endpoint_works() throws Exception {
+    void currencies_works() throws Exception {
+        mockMvc.perform(get("/api/currency/currencies"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void timeframe_works() throws Exception {
         mockMvc.perform(get("/api/currency/timeframe")
+                        .param("base", "EUR")
                         .param("start_date", "2024-01-01")
                         .param("end_date", "2024-01-10"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void shouldFailWithoutParams() throws Exception {
+    void timeframe_missing_params_should_fail() throws Exception {
         mockMvc.perform(get("/api/currency/timeframe"))
                 .andExpect(status().is4xxClientError());
     }
