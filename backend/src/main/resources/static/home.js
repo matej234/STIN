@@ -1,27 +1,23 @@
 window.addEventListener("DOMContentLoaded", init);
 
 async function init() {
-
     const user = localStorage.getItem("user");
-
     if (!user) {
         window.location.href = "index.html";
         return;
     }
 
     document.getElementById("welcome").innerText =
-        "Ahoj " + user;
+        t("welcome") + " " + user;
 
     const currencies = await fetch("/api/currency/currencies")
         .then(r => r.json());
 
     buildUI(currencies);
-
     await loadSettings();
-
     await loadData();
 
-    await loadTimeframe();
+    applyLanguage();
 }
 
 function buildUI(currencies) {
@@ -94,21 +90,21 @@ function renderAnalyze(data) {
     if (!container || !data) return;
 
     container.innerHTML = `
-        <h4>Aktuální porovnání</h4>
+        <h3>${t("currentComparison")}</h3>
 
-        <p><b>Nejsilnější:</b> ${data.strongestCurrency}</p>
+        <p><b>${t("strongest")}:</b> ${data.strongestCurrency}</p>
         <p>1 ${data.base} = ${data.strongestValue}</p>
 
-        <p><b>Nejslabší:</b> ${data.weakestCurrency}</p>
+        <p><b>${t("weakest")}:</b> ${data.weakestCurrency}</p>
         <p>1 ${data.base} = ${data.weakestValue}</p>
     `;
 
     let table = `
-        <h4>Všechny přepočty</h4>
+        <h4>${t("allConversions")}</h4>
         <table style="width:auto; border-collapse: collapse;">
             <tr>
-                <th>Měna</th>
-                <th>Kurz</th>
+                <th>${t("currency")}</th>
+                <th>${t("rate")}</th>
             </tr>
     `;
 
@@ -159,12 +155,12 @@ function renderTimeframe(data) {
     if (!container || !data) return;
 
     let html = `
-        <h4>Průměry za období</h4>
+        <h4>${t("averagePeriod")}</h4>
 
         <table style="width:auto; border-collapse: collapse; margin-bottom:20px;">
             <tr>
-                <th>Měna</th>
-                <th>Průměr</th>
+                <th>${t("currency")}</th>
+                <th>${t("rate")}</th>
             </tr>
     `;
 
@@ -180,7 +176,7 @@ function renderTimeframe(data) {
 
     html += `</table>`;
 
-    html += `<h4>Denní hodnoty</h4>`;
+    html += `<h4>${t("dailyValues")}</h4>`;
 
     for (const date in data.dailyRates) {
 
@@ -189,8 +185,8 @@ function renderTimeframe(data) {
 
             <table style="width:auto; border-collapse: collapse; margin-bottom:15px;">
                 <tr>
-                    <th>Měna</th>
-                    <th>Kurz</th>
+                    <th>${t("currency")}</th>
+                    <th>${t("rate")}</th>
                 </tr>
         `;
 
@@ -210,7 +206,7 @@ function renderTimeframe(data) {
     }
 
     html += `
-        <h4>Graf vývoje</h4>
+        <h4>${t("chart")}</h4>
         <canvas id="currencyChart"></canvas>
     `;
 
@@ -354,4 +350,11 @@ function setChecked(containerSelector, values) {
     checkboxes.forEach(cb => {
         cb.checked = values.includes(cb.value);
     });
+}
+
+function refreshUI() {
+    applyLanguage();
+
+    loadData();
+    loadTimeframe();
 }
