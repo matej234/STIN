@@ -22,11 +22,15 @@ public class SettingsService {
     }
 
     public UserSettings loadSettings() {
+        File file = new File(filePath.toString());
+
+        if (!file.exists()) {
+            return new UserSettings();
+        }
+
         try {
-            return mapper.readValue(
-                    new File(filePath.toString()),
-                    UserSettings.class
-            );
+            return mapper.readValue(file, UserSettings.class);
+
         } catch (IOException e) {
             throw new RuntimeException("Cannot load settings", e);
         }
