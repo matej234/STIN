@@ -12,6 +12,7 @@ public class CurrencyServiceTests {
 
     private final CurrencyService service = new CurrencyService();
 
+
     private CurrencyApiResponse mockApi() {
         Map<String, Double> quotes = new LinkedHashMap<>();
 
@@ -22,12 +23,30 @@ public class CurrencyServiceTests {
         return new CurrencyApiResponse("USD", quotes);
     }
 
+    private CurrencyTimeframeApiResponse mockTimeframeData() {
+
+        Map<String, Map<String, Double>> quotes = new LinkedHashMap<>();
+
+        Map<String, Double> d1 = new LinkedHashMap<>();
+        d1.put("USDEUR", 0.91);
+        d1.put("USDGBP", 0.77);
+        d1.put("USDCZK", 22.9);
+
+        Map<String, Double> d2 = new LinkedHashMap<>();
+        d2.put("USDEUR", 0.92);
+        d2.put("USDGBP", 0.78);
+        d2.put("USDCZK", 23.1);
+
+        quotes.put("2026-05-01", d1);
+        quotes.put("2026-05-02", d2);
+
+        return new CurrencyTimeframeApiResponse("USD", quotes);
+    }
+
     @Test
     void analyze_basic_case() {
-        CurrencyApiResponse api = mockApi();
-
         CurrencyResponse res = service.analyze(
-                api,
+                mockApi(),
                 "EUR",
                 List.of("EUR", "GBP", "CZK")
         );
@@ -35,33 +54,30 @@ public class CurrencyServiceTests {
         assertEquals("USD", res.source);
         assertEquals("EUR", res.base);
 
-        assertNotNull(res.rates);
+        assertFalse(res.rates.isEmpty());
         assertTrue(res.rates.containsKey("CZK"));
-
-        assertNotNull(res.strongestCurrency);
-        assertNotNull(res.weakestCurrency);
     }
 
     @Test
-    void analyze_should_find_rates_correctly() {
-        CurrencyApiResponse api = mockApi();
-
+    void analyze_should_find_strongest_and_weakest() {
         CurrencyResponse res = service.analyze(
-                api,
+                mockApi(),
                 "EUR",
                 List.of("EUR", "GBP", "CZK")
         );
 
+        assertNotNull(res.strongestCurrency);
+        assertNotNull(res.weakestCurrency);
+
         assertEquals("CZK", res.strongestCurrency);
+
         assertEquals("GBP", res.weakestCurrency);
     }
 
     @Test
     void analyze_should_skip_unknown_currency() {
-        CurrencyApiResponse api = mockApi();
-
         CurrencyResponse res = service.analyze(
-                api,
+                mockApi(),
                 "EUR",
                 List.of("EUR", "XXX")
         );
@@ -72,10 +88,72 @@ public class CurrencyServiceTests {
 
     @Test
     void analyze_should_throw_when_base_missing() {
-        CurrencyApiResponse api = mockApi();
-
         assertThrows(IllegalArgumentException.class, () ->
-                service.analyze(api, "ABC", List.of("EUR"))
+                service.analyze(mockApi(), "ABC", List.of("EUR"))
         );
+    }
+
+    @Test
+    void analyze_should_return_empty_rates_when_list_empty() {
+        CurrencyResponse res = service.analyze(
+                mockApi(),
+                "EUR",
+                List.of()
+        );
+
+        assertTrue(res.rates.isEmpty());
+    }
+
+    @Test
+    void analyze_should_include_base_currency_as_one() {
+        CurrencyResponse res = service.analyze(
+                mockApi(),
+                "USD",
+                List.of("USD", "EUR")
+        );
+
+        assertEquals(1.0, res.rates.get("USD"));
+    }
+
+
+    @Test
+    void timeframe_should_filter_dates_correctly() {
+        CurrencyTimeframeResponse res = service.analyzeTimeframe(
+                mockTimeframeData(),
+                "USD",
+                List.of("EUR"),
+                "2026-05-02",
+                "2026-05-03"
+        );
+
+        assertFalse(res.dailyRates.containsKey("2026-05-01"));
+        assertTrue(res.dailyRates.containsKey("2026-05-02"));
+    }
+
+    @Test
+    void timeframe_should_calculate_averages() {
+        CurrencyTimeframeResponse res = service.analyzeTimeframe(
+                mockTimeframeData(),
+                "USD",
+                List.of("EUR"),
+                "2026-05-01",
+                "2026-05-02"
+        );
+
+        assertTrue(res.averages.containsKey("EUR"));
+        assertTrue(res.averages.get("EUR") > 0);
+    }
+
+    @Test
+    void timeframe_should_ignore_unknown_currency() {
+        CurrencyTimeframeResponse res = service.analyzeTimeframe(
+                mockTimeframeData(),
+                "USD",
+                List.of("XXX"),
+                "2026-05-01",
+                "2026-05-02"
+        );
+
+        assertTrue(res.dailyRates.values().stream().allMatch(Map::isEmpty));
     }
 }
