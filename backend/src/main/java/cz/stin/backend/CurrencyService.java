@@ -2,6 +2,7 @@ package cz.stin.backend;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -107,7 +108,9 @@ public class CurrencyService {
     public CurrencyTimeframeResponse analyzeTimeframe(
             CurrencyTimeframeApiResponse apiData,
             String base,
-            List<String> selectedCurrencies
+            List<String> selectedCurrencies,
+            String startDate,
+            String endDate
     ) {
 
         Map<String, Map<String, Double>> dailyRates = new LinkedHashMap<>();
@@ -115,6 +118,17 @@ public class CurrencyService {
         Map<String, List<Double>> averageHelper = new HashMap<>();
 
         for (String date : apiData.quotes.keySet()) {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+            LocalDate current = LocalDate.parse(date);
+
+            if (current.isBefore(start) || current.isAfter(end)) {
+                continue;
+            }
+
+            if (date.compareTo(startDate) < 0 || date.compareTo(endDate) > 0) {
+                continue;
+            }
 
             Map<String, Double> rawDay = apiData.quotes.get(date);
 

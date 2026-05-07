@@ -1,20 +1,27 @@
 window.addEventListener("DOMContentLoaded", init);
 
 async function init() {
+
     const user = localStorage.getItem("user");
+
     if (!user) {
         window.location.href = "index.html";
         return;
     }
 
-    document.getElementById("welcome").innerText = "Ahoj " + user;
+    document.getElementById("welcome").innerText =
+        "Ahoj " + user;
 
     const currencies = await fetch("/api/currency/currencies")
         .then(r => r.json());
 
     buildUI(currencies);
 
+    await loadSettings();
+
     await loadData();
+
+    await loadTimeframe();
 }
 
 function buildUI(currencies) {
@@ -52,7 +59,7 @@ function createCheckbox(container, value, handler) {
 
     input.type = "checkbox";
     input.value = value;
-    input.checked = true;
+    input.checked = false;
 
     input.addEventListener("change", handler);
 
@@ -132,10 +139,10 @@ async function loadTimeframe() {
     const selected = [...document.querySelectorAll("#timeframeCurrencies input:checked")]
         .map(el => el.value);
 
-    if (!start || !end || !base) return;
+    if (!start || !end || !base || selected.length === 0) return;
 
     const res = await fetch(
-        `/api/currency/timeframe?base=${base}&start_date=${start}&end_date=${end}&currencies=${selected.join(",")}`
+        `/api/currency/timeframe?base=${base}&startDate=${start}&endDate=${end}&currencies=${selected.join(",")}`
     );
 
     const data = await res.json();
@@ -264,5 +271,87 @@ function renderChart(data) {
                 }
             }
         }
+    });
+}
+
+async function saveSettings() {
+
+    const settings = {
+
+        baseCurrency:
+            document.getElementById("baseCurrency").value,
+
+        selectedCurrencies:
+            [...document.querySelectorAll("#currencyList input:checked")]
+                .map(el => el.value),
+
+        timeframeBase:
+            document.getElementById("timeframeBase").value,
+
+        timeframeCurrencies:
+            [...document.querySelectorAll("#timeframeCurrencies input:checked")]
+                .map(el => el.value),
+
+        startDate:
+            document.getElementById("start").value,
+
+        endDate:
+            document.getElementById("end").value
+    };
+
+    await fetch("/api/settings", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
+
+    alert("Nastavení uloženo");
+}
+
+async function loadSettings() {
+
+    const res = await fetch("/api/settings");
+
+    const settings = await res.json();
+
+    document.getElementById("baseCurrency").value =
+        settings.baseCurrency;
+
+    document.getElementById("timeframeBase").value =
+        settings.timeframeBase;
+
+    document.getElementById("start").value =
+        settings.startDate;
+
+    document.getElementById("end").value =
+        settings.endDate;
+
+    setChecked(
+        "#currencyList",
+        settings.selectedCurrencies
+    );
+
+    setChecked(
+        "#timeframeCurrencies",
+        settings.timeframeCurrencies
+    );
+
+    await new Promise(r => setTimeout(r, 0));
+
+    await loadData();
+    await loadTimeframe();
+}
+
+function setChecked(containerSelector, values) {
+
+    const checkboxes =
+        document.querySelectorAll(
+            `${containerSelector} input`
+        );
+
+    checkboxes.forEach(cb => {
+        cb.checked = values.includes(cb.value);
     });
 }

@@ -42,8 +42,8 @@ public class CurrencyController {
     @GetMapping("/timeframe")
     public CurrencyTimeframeResponse timeframe(
             @RequestParam String base,
-            @RequestParam String start_date,
-            @RequestParam String end_date,
+            @RequestParam String startDate,
+            @RequestParam String endDate,
             @RequestParam(required = false) String currencies
     ) {
 
@@ -65,7 +65,9 @@ public class CurrencyController {
         return service.analyzeTimeframe(
                 apiData,
                 base,
-                currencyList
+                currencyList,
+                startDate,
+                endDate
         );
     }
 
