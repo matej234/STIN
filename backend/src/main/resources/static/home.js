@@ -2,6 +2,7 @@ window.addEventListener("DOMContentLoaded", init);
 
 async function init() {
     const user = localStorage.getItem("user");
+
     if (!user) {
         window.location.href = "index.html";
         return;
@@ -14,12 +15,11 @@ async function init() {
         .then(r => r.json());
 
     buildUI(currencies);
+
     await loadSettings();
-    await loadData();
 
     applyLanguage();
 }
-
 function buildUI(currencies) {
 
     const currencyContainer = document.getElementById("currencyList");
