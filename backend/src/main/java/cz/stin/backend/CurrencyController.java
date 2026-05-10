@@ -9,9 +9,11 @@ import java.util.*;
 @CrossOrigin
 public class CurrencyController {
 
+    private final CurrencyProvider provider;
     private final CurrencyService service;
 
-    public CurrencyController(CurrencyService service) {
+    public CurrencyController(CurrencyProvider provider, CurrencyService service) {
+        this.provider = provider;
         this.service = service;
     }
 
@@ -20,23 +22,20 @@ public class CurrencyController {
             @RequestParam(defaultValue = "EUR") String base,
             @RequestParam(required = false) String currencies
     ) {
-        CurrencyApiResponse apiData = mockApiData();
 
-        List<String> currencyList;
+        CurrencyApiResponse apiData = provider.getRates();
 
-        if (currencies == null || currencies.isBlank()) {
-            currencyList = new ArrayList<>(service.getCurrencies(apiData));
-        } else {
-            currencyList = Arrays.asList(currencies.split(","));
-        }
+        List<String> list =
+                (currencies == null || currencies.isBlank())
+                        ? new ArrayList<>(service.getCurrencies(apiData))
+                        : Arrays.asList(currencies.split(","));
 
-        return service.analyze(apiData, base, currencyList);
+        return service.analyze(apiData, base, list);
     }
 
     @GetMapping("/currencies")
     public Set<String> currencies() {
-        CurrencyApiResponse apiData = mockApiData();
-        return service.getCurrencies(apiData);
+        return service.getCurrencies(provider.getRates());
     }
 
     @GetMapping("/timeframe")
@@ -47,73 +46,20 @@ public class CurrencyController {
             @RequestParam(required = false) String currencies
     ) {
 
-        CurrencyTimeframeApiResponse apiData = mockTimeframeData();
+        CurrencyTimeframeApiResponse apiData =
+                provider.getTimeframe(startDate, endDate);
 
-        List<String> currencyList;
-
-        if (currencies == null || currencies.isBlank()) {
-
-            currencyList = new ArrayList<>(
-                    service.getCurrenciesFromTimeframe(apiData)
-            );
-
-        } else {
-
-            currencyList = Arrays.asList(currencies.split(","));
-        }
+        List<String> list =
+                (currencies == null || currencies.isBlank())
+                        ? new ArrayList<>(service.getCurrenciesFromTimeframe(apiData))
+                        : Arrays.asList(currencies.split(","));
 
         return service.analyzeTimeframe(
                 apiData,
                 base,
-                currencyList,
+                list,
                 startDate,
                 endDate
-        );
-    }
-
-    private CurrencyApiResponse mockApiData() {
-        Map<String, Double> quotes = new LinkedHashMap<>();
-
-        quotes.put("USDEUR", 0.92);
-        quotes.put("USDGBP", 0.78);
-        quotes.put("USDCZK", 23.1);
-        quotes.put("USDAUD", 1.52);
-        quotes.put("USDJPY", 150.4);
-        quotes.put("USDXYZ", 99.99);
-
-        return new CurrencyApiResponse("USD", quotes);
-    }
-
-    private CurrencyTimeframeApiResponse mockTimeframeData() {
-
-        Map<String, Map<String, Double>> quotes =
-                new LinkedHashMap<>();
-
-        Map<String, Double> d1 = new LinkedHashMap<>();
-        d1.put("USDEUR", 0.91);
-        d1.put("USDGBP", 0.77);
-        d1.put("USDCZK", 22.9);
-        d1.put("USDXYZ", 99.99);
-
-        Map<String, Double> d2 = new LinkedHashMap<>();
-        d2.put("USDEUR", 0.92);
-        d2.put("USDGBP", 0.78);
-        d2.put("USDCZK", 23.1);
-        d2.put("USDXYZ", 99.99);
-
-        Map<String, Double> d3 = new LinkedHashMap<>();
-        d3.put("USDEUR", 0.93);
-        d3.put("USDGBP", 0.79);
-        d3.put("USDCZK", 23.3);
-        d3.put("USDXYZ", 99.99);
-
-        quotes.put("2026-05-01", d1);
-        quotes.put("2026-05-02", d2);
-        quotes.put("2026-05-03", d3);
-
-        return new CurrencyTimeframeApiResponse(
-                "USD",
-                quotes
         );
     }
 }
