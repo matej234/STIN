@@ -1,12 +1,15 @@
 package cz.stin.backend;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-@Profile("prod")
+@ConditionalOnProperty(
+        name = "currency.provider",
+        havingValue = "real"
+)
 public class RealCurrencyProvider implements CurrencyProvider {
 
     @Value("${EXCHANGE_API_KEY}")
@@ -22,7 +25,6 @@ public class RealCurrencyProvider implements CurrencyProvider {
 
         String json = restTemplate.getForObject(url, String.class);
 
-        // 🔴 sem bys měl dát Jackson parsing
         throw new UnsupportedOperationException("Parse JSON → CurrencyApiResponse");
     }
 

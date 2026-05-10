@@ -1,12 +1,16 @@
 package cz.stin.backend;
 
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
-@Profile("dev")
+@ConditionalOnProperty(
+        name = "currency.provider",
+        havingValue = "mock",
+        matchIfMissing = true
+)
 public class MockCurrencyProvider implements CurrencyProvider {
 
     @Override
