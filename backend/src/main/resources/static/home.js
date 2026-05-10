@@ -18,6 +18,12 @@ async function init() {
 
     await loadSettings();
 
+    document.getElementById("baseCurrency")
+        .addEventListener("change", loadData);
+
+    document.getElementById("timeframeBase")
+        .addEventListener("change", loadTimeframe);
+
     applyLanguage();
 }
 function buildUI(currencies) {
@@ -44,9 +50,6 @@ function buildUI(currencies) {
 
     baseSelect.value = "EUR";
     timeframeBase.value = "EUR";
-
-    baseSelect.addEventListener("change", loadData);
-    timeframeBase.addEventListener("change", loadTimeframe);
 }
 
 function createCheckbox(container, value, handler) {
@@ -309,32 +312,33 @@ async function saveSettings() {
 async function loadSettings() {
 
     const res = await fetch("/api/settings");
-
     const settings = await res.json();
 
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     document.getElementById("baseCurrency").value =
-        settings.baseCurrency;
+        settings.baseCurrency || "EUR";
 
     document.getElementById("timeframeBase").value =
-        settings.timeframeBase;
+        settings.timeframeBase || "EUR";
 
     document.getElementById("start").value =
-        settings.startDate;
+        settings.startDate || "";
 
     document.getElementById("end").value =
-        settings.endDate;
+        settings.endDate || "";
 
     setChecked(
         "#currencyList",
-        settings.selectedCurrencies
+        settings.selectedCurrencies || []
     );
 
     setChecked(
         "#timeframeCurrencies",
-        settings.timeframeCurrencies
+        settings.timeframeCurrencies || []
     );
 
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     await loadData();
     await loadTimeframe();
@@ -348,7 +352,9 @@ function setChecked(containerSelector, values) {
         );
 
     checkboxes.forEach(cb => {
-        cb.checked = values.includes(cb.value);
+        cb.checked =
+            Array.isArray(values) &&
+            values.includes(cb.value);
     });
 }
 
