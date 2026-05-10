@@ -18,7 +18,7 @@ public class SettingsService {
     }
 
     public SettingsService() {
-        this.filePath = Path.of("backend/data/settings.json");
+        this.filePath = Path.of("data/settings.json");
     }
 
     public UserSettings loadSettings() {
