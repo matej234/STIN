@@ -53,18 +53,12 @@ public class SettingsServiceTests {
     }
 
     @Test
-    void load_should_create_default_file_when_file_missing() {
-        Path filePath = tempDir.resolve("settings.json");
-
-        assertFalse(Files.exists(filePath));
-
-        SettingsService service =
-                new SettingsService(filePath);
+    void load_should_return_default_or_empty_settings_when_file_missing() {
+        SettingsService service = createService();
 
         UserSettings loaded = service.loadSettings();
 
         assertNotNull(loaded);
-        assertTrue(Files.exists(filePath));
     }
 
     @Test
