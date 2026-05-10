@@ -1,0 +1,8 @@
+{
+  "baseCurrency" : "USD",
+  "selectedCurrencies" : [ "EUR", "CZK" ],
+  "timeframeBase" : "USD",
+  "timeframeCurrencies" : [ "EUR", "CZK" ],
+  "startDate" : "2026-05-02",
+  "endDate" : "2026-05-03"
+}
