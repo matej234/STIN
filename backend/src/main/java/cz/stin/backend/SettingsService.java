@@ -20,6 +20,9 @@ public class SettingsService {
     public SettingsService() {
         this.filePath = Path.of("data/settings.json");
     }
+    public SettingsService(Path filePath) {
+        this.filePath = filePath;
+    }
 
     public UserSettings loadSettings() {
         File file = new File(filePath.toString());
