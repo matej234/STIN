@@ -23,6 +23,9 @@ public class SettingsService {
 
     public UserSettings loadSettings() {
         File file = new File(filePath.toString());
+        System.out.println("WORKDIR: " + System.getProperty("user.dir"));
+        System.out.println("SETTINGS PATH: " + file.getAbsolutePath());
+        System.out.println("FILE EXISTS: " + file.exists());
 
         if (!file.exists()) {
             return new UserSettings();
