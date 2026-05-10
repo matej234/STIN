@@ -3,6 +3,7 @@ package cz.stin.backend;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,6 +21,10 @@ public class SettingsServiceTests {
         UserSettings s = new UserSettings();
         s.baseCurrency = "USD";
         s.timeframeBase = "EUR";
+        s.selectedCurrencies = java.util.List.of("EUR", "CZK");
+        s.timeframeCurrencies = java.util.List.of("EUR", "CZK");
+        s.startDate = "2026-05-02";
+        s.endDate = "2026-05-03";
         return s;
     }
 
@@ -35,6 +40,16 @@ public class SettingsServiceTests {
         assertNotNull(loaded);
         assertEquals("USD", loaded.baseCurrency);
         assertEquals("EUR", loaded.timeframeBase);
+        assertEquals(
+                java.util.List.of("EUR", "CZK"),
+                loaded.selectedCurrencies
+        );
+        assertEquals(
+                java.util.List.of("EUR", "CZK"),
+                loaded.timeframeCurrencies
+        );
+        assertEquals("2026-05-02", loaded.startDate);
+        assertEquals("2026-05-03", loaded.endDate);
     }
 
     @Test
@@ -57,6 +72,8 @@ public class SettingsServiceTests {
         UserSettings second = new UserSettings();
         second.baseCurrency = "CZK";
         second.timeframeBase = "GBP";
+        second.selectedCurrencies =
+                java.util.List.of("USD", "EUR");
 
         service.saveSettings(first);
         service.saveSettings(second);
@@ -65,5 +82,9 @@ public class SettingsServiceTests {
 
         assertEquals("CZK", loaded.baseCurrency);
         assertEquals("GBP", loaded.timeframeBase);
+        assertEquals(
+                java.util.List.of("USD", "EUR"),
+                loaded.selectedCurrencies
+        );
     }
 }
