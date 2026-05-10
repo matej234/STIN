@@ -23,13 +23,17 @@ public class RealCurrencyProvider implements CurrencyProvider {
         String url =
                 "https://api.exchangerate.host/live?access_key=" + apiKey;
 
-        String json = restTemplate.getForObject(url, String.class);
-
-        throw new UnsupportedOperationException("Parse JSON → CurrencyApiResponse");
+        return restTemplate.getForObject(
+                url,
+                CurrencyApiResponse.class
+        );
     }
 
     @Override
-    public CurrencyTimeframeApiResponse getTimeframe(String start, String end) {
+    public CurrencyTimeframeApiResponse getTimeframe(
+            String start,
+            String end
+    ) {
 
         String url =
                 "https://api.exchangerate.host/timeframe"
@@ -37,8 +41,9 @@ public class RealCurrencyProvider implements CurrencyProvider {
                         + "&start_date=" + start
                         + "&end_date=" + end;
 
-        String json = restTemplate.getForObject(url, String.class);
-
-        throw new UnsupportedOperationException("Parse JSON → TimeframeResponse");
+        return restTemplate.getForObject(
+                url,
+                CurrencyTimeframeApiResponse.class
+        );
     }
 }
