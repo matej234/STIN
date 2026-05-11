@@ -16,15 +16,11 @@ async function init() {
 
     buildUI(currencies);
 
+    applyLanguage();
+
     await loadSettings();
 
-    document.getElementById("baseCurrency")
-        .addEventListener("change", loadData);
-
-    document.getElementById("timeframeBase")
-        .addEventListener("change", loadTimeframe);
-
-    applyLanguage();
+    await refreshUI();
 }
 function buildUI(currencies) {
 
@@ -377,11 +373,11 @@ function setChecked(containerSelector, values) {
     });
 }
 
-function refreshUI() {
+async function refreshUI() {
     applyLanguage();
 
-    loadData();
-    loadTimeframe();
+    await loadData();
+    await loadTimeframe();
 }
 
 async function saveCalculation(data) {
