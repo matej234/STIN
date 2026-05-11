@@ -15,6 +15,8 @@ public class CurrencyResponse {
 
     public Map<String, Double> rates;
 
+    public Map<String, Double> sourceRates;
+
     public CurrencyResponse(
             String source,
             String base,
@@ -22,7 +24,8 @@ public class CurrencyResponse {
             double strongestValue,
             String weakestCurrency,
             double weakestValue,
-            Map<String, Double> rates
+            Map<String, Double> rates,
+            Map<String, Double> sourceRates
     ) {
         this.source = source;
         this.base = base;
@@ -31,5 +34,6 @@ public class CurrencyResponse {
         this.weakestCurrency = weakestCurrency;
         this.weakestValue = weakestValue;
         this.rates = rates;
+        this.sourceRates = sourceRates;
     }
 }
