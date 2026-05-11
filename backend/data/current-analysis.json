@@ -1,0 +1,31 @@
+{
+  "source" : "USD",
+  "base" : "EUR",
+  "selectedCurrencies" : [ "USD", "EUR", "GBP", "CZK" ],
+  "calculations" : {
+    "USD" : {
+      "sourceToBase" : "USD → EUR",
+      "sourceToTarget" : "USD → USD",
+      "finalCalculation" : "USD / EUR = 1.087"
+    },
+    "EUR" : {
+      "sourceToBase" : "USD → EUR",
+      "sourceToTarget" : "USD → EUR",
+      "finalCalculation" : "EUR / EUR = 1"
+    },
+    "GBP" : {
+      "sourceToBase" : "USD → EUR",
+      "sourceToTarget" : "USD → GBP",
+      "finalCalculation" : "GBP / EUR = 0.8478"
+    },
+    "CZK" : {
+      "sourceToBase" : "USD → EUR",
+      "sourceToTarget" : "USD → CZK",
+      "finalCalculation" : "CZK / EUR = 25.1087"
+    }
+  },
+  "strongestCurrency" : "CZK",
+  "strongestValue" : 25.1087,
+  "weakestCurrency" : "GBP",
+  "weakestValue" : 0.8478
+}

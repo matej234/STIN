@@ -44,8 +44,8 @@ function buildUI(currencies) {
         baseSelect.add(new Option(c, c));
         timeframeBase.add(new Option(c, c));
 
-        createCheckbox(currencyContainer, c, loadData);
-        createCheckbox(timeframeContainer, c, loadTimeframe);
+        createCheckbox(currencyContainer, c, null);
+        createCheckbox(timeframeContainer, c, null);
     }
 
     baseSelect.value = "EUR";
@@ -60,7 +60,9 @@ function createCheckbox(container, value, handler) {
     input.value = value;
     input.checked = false;
 
-    input.addEventListener("change", handler);
+    if (handler) {
+        input.addEventListener("change", handler);
+    }
 
     label.appendChild(input);
     label.append(" " + value);
@@ -72,8 +74,9 @@ async function loadData() {
 
     const base = document.getElementById("baseCurrency").value;
 
-    const selected = [...document.querySelectorAll("#currencyList input:checked")]
-        .map(el => el.value);
+    const selected =
+        [...document.querySelectorAll("#currencyList input:checked")]
+            .map(el => el.value);
 
     if (!base || selected.length === 0) return;
 
@@ -84,6 +87,8 @@ async function loadData() {
     const data = await res.json();
 
     renderAnalyze(data);
+
+    await saveCurrentAnalysis(data);
 }
 
 function renderAnalyze(data) {
@@ -148,9 +153,23 @@ async function loadTimeframe() {
 
     console.log(data);
 
-    renderTimeframe(data);
+    renderOnlyChart(data);
+    await saveCalculation(data);
 }
+function renderOnlyChart(data) {
 
+    const container =
+        document.getElementById("timeframeContainer");
+
+    if (!container || !data) return;
+
+    container.innerHTML = `
+        <h4>${t("chart")}</h4>
+        <canvas id="currencyChart"></canvas>
+    `;
+
+    renderChart(data);
+}
 function renderTimeframe(data) {
 
     const container = document.getElementById("timeframeContainer");
@@ -363,4 +382,88 @@ function refreshUI() {
 
     loadData();
     loadTimeframe();
+}
+
+async function saveCalculation(data) {
+
+    const start = document.getElementById("start").value;
+    const end = document.getElementById("end").value;
+    const base = document.getElementById("timeframeBase").value;
+
+    if (!start || !end || !base || !data?.dailyRates) {
+        return;
+    }
+
+    const record = {
+        base: base,
+        startDate: start,
+        endDate: end,
+        dailyRates: data.dailyRates
+    };
+
+    await fetch("/api/history/save", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(record)
+    });
+
+    console.log("Analýza automaticky uložena");
+}
+
+async function saveCurrentAnalysis(data) {
+
+    const base =
+        document.getElementById("baseCurrency").value;
+
+    const selectedCurrencies =
+        [...document.querySelectorAll("#currencyList input:checked")]
+            .map(el => el.value);
+
+    if (!base || selectedCurrencies.length === 0 || !data) {
+        return;
+    }
+
+    const calculations = {};
+
+    for (const currency of selectedCurrencies) {
+
+        const finalValue = data.rates[currency];
+
+        calculations[currency] = {
+            sourceToBase:
+                `USD → ${base}`,
+
+            sourceToTarget:
+                `USD → ${currency}`,
+
+            finalCalculation:
+                `${currency} / ${base} = ${finalValue}`
+        };
+    }
+
+    const record = {
+        source: "USD",
+        base: base,
+        selectedCurrencies: selectedCurrencies,
+
+        calculations: calculations,
+
+        strongestCurrency: data.strongestCurrency,
+        strongestValue: data.strongestValue,
+
+        weakestCurrency: data.weakestCurrency,
+        weakestValue: data.weakestValue
+    };
+
+    await fetch("/api/current-analysis/save", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(record)
+    });
+
+    console.log("current-analysis.json saved");
 }

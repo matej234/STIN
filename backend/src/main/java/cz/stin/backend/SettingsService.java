@@ -20,7 +20,8 @@ public class SettingsService {
     private final boolean useTemplate;
 
     public SettingsService() {
-        this.filePath = Path.of("data/settings.json");
+        this.filePath =
+                Path.of("/home/site/wwwroot/backend/data/settings.json");
         this.useTemplate = true;
     }
 
@@ -74,7 +75,7 @@ public class SettingsService {
             file.getParentFile().mkdirs();
 
             InputStream input =
-                    new ClassPathResource("data/settings.json")
+                    new ClassPathResource("backend/data/settings.json")
                             .getInputStream();
 
             Files.copy(
