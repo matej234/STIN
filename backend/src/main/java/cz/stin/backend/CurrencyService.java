@@ -64,7 +64,8 @@ public class CurrencyService {
                 round(strongestValue),
                 weakest,
                 round(weakestValue),
-                calculatedRates
+                calculatedRates,
+                sourceRates
         );
     }
 

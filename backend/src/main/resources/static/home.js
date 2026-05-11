@@ -431,12 +431,18 @@ async function saveCurrentAnalysis(data) {
 
         const finalValue = data.rates[currency];
 
+        const baseSourceValue =
+            data.sourceRates[base];
+
+        const targetSourceValue =
+            data.sourceRates[currency];
+
         calculations[currency] = {
             sourceToBase:
-                `USD → ${base}`,
+                `USD → ${base} = ${baseSourceValue}`,
 
             sourceToTarget:
-                `USD → ${currency}`,
+                `USD → ${currency} = ${targetSourceValue}`,
 
             finalCalculation:
                 `${currency} / ${base} = ${finalValue}`
