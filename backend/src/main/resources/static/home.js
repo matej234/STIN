@@ -74,11 +74,20 @@ async function loadData() {
         [...document.querySelectorAll("#currencyList input:checked")]
             .map(el => el.value);
 
-    if (!base || selected.length === 0) return;
+    if (!base || selected.length === 0) {
+        alert("At least one currency must be selected");
+        return;
+    }
 
     const res = await fetch(
         `/api/currency/analyze?base=${base}&currencies=${selected.join(",")}`
     );
+
+    if (!res.ok) {
+        const errorMessage = await res.text();
+        alert(errorMessage);
+        return;
+    }
 
     const data = await res.json();
 
@@ -139,11 +148,20 @@ async function loadTimeframe() {
     const selected = [...document.querySelectorAll("#timeframeCurrencies input:checked")]
         .map(el => el.value);
 
-    if (!start || !end || !base || selected.length === 0) return;
+    if (!start || !end || !base || selected.length === 0) {
+        alert("Please fill all fields and select at least one currency");
+        return;
+    }
 
     const res = await fetch(
         `/api/currency/timeframe?base=${base}&startDate=${start}&endDate=${end}&currencies=${selected.join(",")}`
     );
+
+    if (!res.ok) {
+        const errorMessage = await res.text();
+        alert(errorMessage);
+        return;
+    }
 
     const data = await res.json();
 

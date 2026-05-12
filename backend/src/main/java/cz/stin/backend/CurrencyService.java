@@ -13,6 +13,11 @@ public class CurrencyService {
             String base,
             List<String> selectedCurrencies
     ) {
+        if (selectedCurrencies == null || selectedCurrencies.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "At least one currency must be selected"
+            );
+        }
         Map<String, Double> sourceRates = normalizeQuotes(apiData);
 
         if (!sourceRates.containsKey(base)) {
@@ -114,20 +119,29 @@ public class CurrencyService {
             String endDate
     ) {
 
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException(
+                    "Start date must be before end date"
+            );
+        }
+
+        if (selectedCurrencies == null || selectedCurrencies.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "At least one currency must be selected"
+            );
+        }
+
         Map<String, Map<String, Double>> dailyRates = new LinkedHashMap<>();
 
         Map<String, List<Double>> averageHelper = new HashMap<>();
 
         for (String date : apiData.quotes.keySet()) {
-            LocalDate start = LocalDate.parse(startDate);
-            LocalDate end = LocalDate.parse(endDate);
             LocalDate current = LocalDate.parse(date);
 
             if (current.isBefore(start) || current.isAfter(end)) {
-                continue;
-            }
-
-            if (date.compareTo(startDate) < 0 || date.compareTo(endDate) > 0) {
                 continue;
             }
 
