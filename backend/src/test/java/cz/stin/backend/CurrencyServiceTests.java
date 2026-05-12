@@ -94,14 +94,15 @@ public class CurrencyServiceTests {
     }
 
     @Test
-    void analyze_should_return_empty_rates_when_list_empty() {
-        CurrencyResponse res = service.analyze(
-                mockApi(),
-                "EUR",
-                List.of()
+    void analyze_should_fail_when_list_empty() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.analyze(
+                        mockApi(),
+                        "EUR",
+                        List.of()
+                )
         );
-
-        assertTrue(res.rates.isEmpty());
     }
 
     @Test
@@ -155,5 +156,19 @@ public class CurrencyServiceTests {
         );
 
         assertTrue(res.dailyRates.values().stream().allMatch(Map::isEmpty));
+    }
+
+    @Test
+    void analyze_timeframe_should_fail_when_start_after_end() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.analyzeTimeframe(
+                        mockTimeframeData(),
+                        "EUR",
+                        List.of("USD", "CZK"),
+                        "2024-01-10",
+                        "2024-01-01"
+                )
+        );
     }
 }
