@@ -21,6 +21,9 @@ public class ErrorLogService {
         this.filePath =
                 Path.of("/home/site/wwwroot/backend/data/error-log.json");
     }
+    public ErrorLogService(Path customPath) {
+        this.filePath = customPath;
+    }
 
     public void save(String type, String message) {
         try {

@@ -20,6 +20,9 @@ public class CalculationHistoryService {
         this.filePath =
                 Path.of("/home/site/wwwroot/backend/data/calculations.json");
     }
+    public CalculationHistoryService(Path customPath) {
+        this.filePath = customPath;
+    }
 
     public void saveCalculation(CalculationRecord record) {
         try {

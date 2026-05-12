@@ -8,6 +8,9 @@ public class CurrencyTimeframeApiResponse {
 
     public Map<String, Map<String, Double>> quotes;
 
+    public CurrencyTimeframeApiResponse() {
+    }
+
     public CurrencyTimeframeApiResponse(
             String source,
             Map<String, Map<String, Double>> quotes

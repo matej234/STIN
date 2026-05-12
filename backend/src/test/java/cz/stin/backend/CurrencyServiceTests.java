@@ -171,4 +171,31 @@ public class CurrencyServiceTests {
                 )
         );
     }
+    @Test
+    void timeframe_should_fail_when_currency_list_empty() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.analyzeTimeframe(
+                        mockTimeframeData(),
+                        "EUR",
+                        List.of(),
+                        "2026-05-01",
+                        "2026-05-02"
+                )
+        );
+    }
+
+    @Test
+    void analyze_should_work_with_only_base_currency() {
+        CurrencyResponse res = service.analyze(
+                mockApi(),
+                "EUR",
+                List.of("EUR")
+        );
+
+        assertNotNull(res);
+        assertTrue(
+                res.rates.containsKey("EUR")
+        );
+    }
 }

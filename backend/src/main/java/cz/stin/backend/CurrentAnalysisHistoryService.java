@@ -17,6 +17,9 @@ public class CurrentAnalysisHistoryService {
         this.filePath =
                 Path.of("/home/site/wwwroot/backend/data/current-analysis.json");
     }
+    public CurrentAnalysisHistoryService(Path customPath) {
+        this.filePath = customPath;
+    }
 
     public void save(CurrentAnalysisRecord record) {
         try {
