@@ -68,10 +68,7 @@ public class ApiCacheService {
             return mapper.readValue(file, clazz);
 
         } catch (IOException e) {
-            throw new RuntimeException(
-                    "Cannot load API cache",
-                    e
-            );
+            return null;
         }
     }
 }
