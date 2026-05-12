@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", init);
-
+let cachedAnalyzeData = null;
 async function init() {
     const user = localStorage.getItem("user");
 
@@ -86,21 +86,23 @@ async function loadData() {
         return;
     }
 
-    const res = await fetch(
-        `/api/currency/analyze?base=${base}&currencies=${selected.join(",")}`
-    );
+    if (!cachedAnalyzeData) {
+        const res = await fetch(
+            `/api/currency/analyze?base=${base}&currencies=${selected.join(",")}`
+        );
 
-    if (!res.ok) {
-        const errorMessage = await res.text();
-        alert(errorMessage);
-        return;
+        if (!res.ok) {
+            const errorMessage = await res.text();
+            alert(errorMessage);
+            return;
+        }
+
+        cachedAnalyzeData = await res.json();
     }
 
-    const data = await res.json();
+    renderAnalyze(cachedAnalyzeData);
 
-    renderAnalyze(data);
-
-    await saveCurrentAnalysis(data);
+    await saveCurrentAnalysis(cachedAnalyzeData);
 }
 
 function renderAnalyze(data) {
