@@ -1,36 +1,65 @@
 package cz.stin.backend;
 
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.beans.factory.annotation.Value;
+
+import java.util.*;
+
 @RestController
 @RequestMapping("/api/currency")
 @CrossOrigin
 public class CurrencyController {
 
-    @Value("${EXCHANGE_API_KEY:dummy}")
-    private String API_KEY;
+    private final CurrencyProvider provider;
+    private final CurrencyService service;
 
-    @GetMapping("/rates")
-    public String rates() {
+    public CurrencyController(CurrencyProvider provider, CurrencyService service) {
+        this.provider = provider;
+        this.service = service;
+    }
 
-        String url = "https://api.exchangerate.host/live?access_key=" + API_KEY;
+    @GetMapping("/analyze")
+    public CurrencyResponse analyze(
+            @RequestParam(defaultValue = "EUR") String base,
+            @RequestParam(required = false) String currencies
+    ) {
 
-        return new RestTemplate().getForObject(url, String.class);
+        CurrencyApiResponse apiData = provider.getRates();
+
+        List<String> list =
+                (currencies == null || currencies.isBlank())
+                        ? new ArrayList<>(service.getCurrencies(apiData))
+                        : Arrays.asList(currencies.split(","));
+
+        return service.analyze(apiData, base, list);
+    }
+
+    @GetMapping("/currencies")
+    public Set<String> currencies() {
+        return service.getCurrencies(provider.getRates());
     }
 
     @GetMapping("/timeframe")
-    public String timeframe(
-            @RequestParam String start_date,
-            @RequestParam String end_date
+    public CurrencyTimeframeResponse timeframe(
+            @RequestParam String base,
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(required = false) String currencies
     ) {
 
-        String url =
-                "https://api.exchangerate.host/timeframe"
-                        + "?access_key=" + API_KEY
-                        + "&start_date=" + start_date
-                        + "&end_date=" + end_date;
+        CurrencyTimeframeApiResponse apiData =
+                provider.getTimeframe(startDate, endDate);
 
-        return new RestTemplate().getForObject(url, String.class);
+        List<String> list =
+                (currencies == null || currencies.isBlank())
+                        ? new ArrayList<>(service.getCurrenciesFromTimeframe(apiData))
+                        : Arrays.asList(currencies.split(","));
+
+        return service.analyzeTimeframe(
+                apiData,
+                base,
+                list,
+                startDate,
+                endDate
+        );
     }
 }

@@ -1,265 +1,508 @@
-const DEV_MODE = location.hostname === "localhost";
-
-let rates = {};
-let apiBase = "";
-
 window.addEventListener("DOMContentLoaded", init);
-
+let cachedAnalyzeData = null;
 async function init() {
     const user = localStorage.getItem("user");
+
     if (!user) {
         window.location.href = "index.html";
         return;
     }
 
-    document.getElementById("welcome").innerText = "Ahoj " + user;
+    document.getElementById("welcome").innerText =
+        t("welcome") + " " + user;
 
-    const data = await fetchData();
+    const currencies = await fetch("/api/currency/currencies")
+        .then(r => r.json());
 
-    if (!data?.quotes) return;
+    buildUI(currencies);
 
-    apiBase = data.source;
-    rates = data.quotes;
+    applyLanguage();
 
-    const currencies = Object.keys(rates).map(k => k.substring(3));
-    currencies.push(apiBase);
+    await loadSettings();
 
-    const sorted = [...new Set(currencies)].sort();
-
-    buildUI(sorted);
-    recalculate();
+    await refreshUI();
 }
+function buildUI(currencies) {
 
-async function fetchData() {
-    if (location.hostname === "localhost") {
-        return await (await fetch("/data/rates.json")).json();
-    }
-    return await (await fetch("/api/currency/rates")).json();
-}
-
-function buildUI(sorted) {
+    const currencyContainer = document.getElementById("currencyList");
+    const timeframeContainer = document.getElementById("timeframeCurrencies");
 
     const baseSelect = document.getElementById("baseCurrency");
-    const tfBase = document.getElementById("timeframeBase");
-    const currencyList = document.getElementById("currencyList");
-    const tfList = document.getElementById("timeframeCurrencies");
+    const timeframeBase = document.getElementById("timeframeBase");
 
-    if (!baseSelect || !tfBase || !currencyList || !tfList) return;
-
-    const defaults = ["USD","EUR","GBP"];
-
+    currencyContainer.innerHTML = "";
+    timeframeContainer.innerHTML = "";
     baseSelect.innerHTML = "";
-    tfBase.innerHTML = "";
-    currencyList.innerHTML = "";
-    tfList.innerHTML = "";
+    timeframeBase.innerHTML = "";
 
-    for (const c of sorted) {
+    for (const c of currencies) {
+
         baseSelect.add(new Option(c, c));
-        tfBase.add(new Option(c, c));
+        timeframeBase.add(new Option(c, c));
+
+        createCheckbox(currencyContainer, c, null);
+        createCheckbox(timeframeContainer, c, null);
     }
 
-    baseSelect.value = apiBase;
-    tfBase.value = apiBase;
+    baseSelect.value = "EUR";
+    timeframeBase.value = "EUR";
+}
 
-    for (const c of sorted) {
+function createCheckbox(container, value, handler) {
+    const label = document.createElement("label");
+    const input = document.createElement("input");
 
-        const make = (container, bind) => {
-            const label = document.createElement("label");
-            const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = value;
+    input.checked = false;
 
-            input.type = "checkbox";
-            input.value = c;
-            input.checked = defaults.includes(c);
+    if (handler) {
+        input.addEventListener("change", handler);
+    }
 
-            if (bind) {
-                input.addEventListener("change", recalculate);
+    label.appendChild(input);
+    label.append(" " + value);
+
+    container.appendChild(label);
+}
+
+async function loadData() {
+
+    const base = document.getElementById("baseCurrency").value;
+
+    const selected =
+        [...document.querySelectorAll("#currencyList input:checked")]
+            .map(el => el.value);
+
+    if (!base || selected.length === 0) {
+        await fetch(
+            "/api/error-log?type=VALIDATION_ERROR&message=At least one currency must be selected",
+            {
+                method: "POST"
             }
+        );
 
-            label.appendChild(input);
-            label.append(" " + c);
-            container.appendChild(label);
-        };
-
-        make(currencyList, true);
-        make(tfList, false);
+        alert("At least one currency must be selected");
+        return;
     }
-}
 
-function getRate(currency) {
-    if (currency === apiBase) return 1;
+    if (!cachedAnalyzeData) {
+        const res = await fetch(
+            `/api/currency/analyze?base=${base}&currencies=${selected.join(",")}`
+        );
 
-    const key = apiBase + currency;
-    const value = rates[key];
-
-    return value ?? null;
-}
-
-window.recalculate = function () {
-
-    const base = document.getElementById("baseCurrency")?.value;
-    if (!base) return;
-
-    const selected = [...document.querySelectorAll("#currencyList input:checked")]
-        .map(el => el.value);
-
-    if (!selected.length) return;
-
-    const baseRate = (base === apiBase)
-        ? 1
-        : getRate(base);
-
-    if (!baseRate) return;
-
-    let strongest = null;
-    let weakest = null;
-
-    let html = `
-    <div style="
-        max-height: 300px;
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-    ">
-    <table style="width:100%; border-collapse:collapse;">
-    <tr>
-      <th style="text-align:left;">Měna</th>
-      <th style="text-align:left;">Kurz</th>
-    </tr>
-    `;
-
-    for (const c of selected) {
-
-        const rateC = rates[apiBase + c] ?? (c === apiBase ? 1 : null);
-        const rateB = rates[apiBase + base] ?? (base === apiBase ? 1 : null);
-
-        let value;
-
-        if (!rateC || !rateB) {
-            value = null;
-        } else {
-            value = rateC / rateB;
+        if (!res.ok) {
+            const errorMessage = await res.text();
+            alert(errorMessage);
+            return;
         }
 
-        html += `
-        <tr>
-          <td>${c}</td>
-          <td>
-            ${value === null
-                ? "—"
-                : `1 ${base} = ${value.toFixed(4)} ${c}`
-            }
-          </td>
-        </tr>
-        `;
-
-        if (value === null) continue;
-
-        if (!strongest || value < strongest.value)
-            strongest = { c, value };
-
-        if (!weakest || value > weakest.value)
-            weakest = { c, value };
-    }
-    html += `
-    </table>
-    </div>
-    `;
-
-    const out = document.getElementById("statsContainer");
-
-    if (strongest && weakest) {
-        out.innerHTML = `
-            <h4>Aktuální porovnání</h4>
-
-            <p><b>Nejsilnější:</b> ${strongest.c}</p>
-            <p>1 ${base} = ${strongest.value.toFixed(4)} ${strongest.c}</p>
-
-            <p><b>Nejslabší:</b> ${weakest.c}</p>
-            <p>1 ${base} = ${weakest.value.toFixed(4)} ${weakest.c}</p>
-
-            <hr>
-            ${html}
-        `;
-    } else {
-        out.innerHTML = "<p>Žádná data k výpočtu</p>";
-    }
-};
-
-window.loadTimeframe = async function () {
-
-    const start = document.getElementById("start")?.value;
-    const end = document.getElementById("end")?.value;
-
-    if (!start || !end) return;
-
-    const data = await fetchTimeframe(start, end);
-
-    analyzeTimeframe(data?.quotes);
-};
-
-async function fetchTimeframe(start, end) {
-
-    if (location.hostname === "localhost") {
-        return await (await fetch("/data/timeframe.json")).json();
+        cachedAnalyzeData = await res.json();
     }
 
-    return await (await fetch(
-        `/api/currency/timeframe?start_date=${start}&end_date=${end}`
-    )).json();
+    renderAnalyze(cachedAnalyzeData);
+
+    await saveCurrentAnalysis(cachedAnalyzeData);
 }
 
-function analyzeTimeframe(quotes) {
+function renderAnalyze(data) {
+
+    const container = document.getElementById("analyzeContainer");
+
+    if (!container || !data) return;
+
+    container.innerHTML = `
+        <h3>${t("currentComparison")}</h3>
+
+        <p><b>${t("strongest")}:</b> ${data.strongestCurrency}</p>
+        <p>1 ${data.base} = ${data.strongestValue}</p>
+
+        <p><b>${t("weakest")}:</b> ${data.weakestCurrency}</p>
+        <p>1 ${data.base} = ${data.weakestValue}</p>
+    `;
+
+    let table = `
+        <h4>${t("allConversions")}</h4>
+        <table style="width:auto; border-collapse: collapse;">
+            <tr>
+                <th>${t("currency")}</th>
+                <th>${t("rate")}</th>
+            </tr>
+    `;
+
+    for (const currency in data.rates) {
+
+        table += `
+            <tr>
+                <td style="padding:4px 12px 4px 0">${currency}</td>
+                <td style="padding:4px 0">
+                    1 ${data.base} = ${data.rates[currency]} ${currency}
+                </td>
+            </tr>
+        `;
+    }
+
+    table += `</table>`;
+
+    container.innerHTML += table;
+}
+
+async function loadTimeframe() {
+
+    const start = document.getElementById("start").value;
+    const end = document.getElementById("end").value;
+
+    const base = document.getElementById("timeframeBase").value;
 
     const selected = [...document.querySelectorAll("#timeframeCurrencies input:checked")]
         .map(el => el.value);
 
-    const base = document.getElementById("timeframeBase")?.value;
+    if (!start || !end || !base || selected.length === 0) {
+        await fetch(
+            "/api/error-log?type=VALIDATION_ERROR&message=Please fill all fields and select at least one currency",
+            {
+                method: "POST"
+            }
+        );
 
-    if (!quotes || !selected.length || !base) return;
-
-    const series = {};
-
-    for (const date in quotes) {
-        const day = quotes[date];
-
-        for (const c of selected) {
-
-            const rate = (c === apiBase)
-                ? 1
-                : day[apiBase + c];
-
-            const baseRate = (base === apiBase)
-                ? 1
-                : day[apiBase + base];
-
-            if (!rate || !baseRate) continue;
-
-            const value = rate / baseRate;
-
-            if (!series[c]) series[c] = [];
-            series[c].push(value);
-        }
+        alert("Please fill all fields and select at least one currency");
+        return;
     }
 
-    let html = `
-        <h4>Průměry za období</h4>
-        <table style="width:100%; border-collapse:collapse;">
-        <tr><th>Měna</th><th>Průměr</th></tr>
+    const res = await fetch(
+        `/api/currency/timeframe?base=${base}&startDate=${start}&endDate=${end}&currencies=${selected.join(",")}`
+    );
+
+    if (!res.ok) {
+        const errorMessage = await res.text();
+        alert(errorMessage);
+        return;
+    }
+
+    const data = await res.json();
+
+    console.log(data);
+
+    renderOnlyChart(data);
+    await saveCalculation(data);
+}
+function renderOnlyChart(data) {
+
+    const container =
+        document.getElementById("timeframeContainer");
+
+    if (!container || !data) return;
+
+    container.innerHTML = `
+        <h4>${t("chart")}</h4>
+        <canvas id="currencyChart"></canvas>
     `;
 
-    for (const c in series) {
-        const arr = series[c];
-        const avg = arr.reduce((a,b) => a + b, 0) / arr.length;
+    renderChart(data);
+}
+function renderTimeframe(data) {
+
+    const container = document.getElementById("timeframeContainer");
+
+    if (!container || !data) return;
+
+    let html = `
+        <h4>${t("averagePeriod")}</h4>
+
+        <table style="width:auto; border-collapse: collapse; margin-bottom:20px;">
+            <tr>
+                <th>${t("currency")}</th>
+                <th>${t("rate")}</th>
+            </tr>
+    `;
+
+    for (const currency in data.averages) {
 
         html += `
             <tr>
-              <td>${c}</td>
-              <td>${avg.toFixed(4)}</td>
+                <td style="padding:4px 12px 4px 0">${currency}</td>
+                <td>${data.averages[currency]}</td>
             </tr>
         `;
     }
 
     html += `</table>`;
 
-    document.getElementById("statsContainer").innerHTML = html;
+    html += `<h4>${t("dailyValues")}</h4>`;
+
+    for (const date in data.dailyRates) {
+
+        html += `
+            <h5 style="margin-bottom:5px;">${date}</h5>
+
+            <table style="width:auto; border-collapse: collapse; margin-bottom:15px;">
+                <tr>
+                    <th>${t("currency")}</th>
+                    <th>${t("rate")}</th>
+                </tr>
+        `;
+
+        const day = data.dailyRates[date];
+
+        for (const currency in day) {
+
+            html += `
+                <tr>
+                    <td style="padding:4px 12px 4px 0">${currency}</td>
+                    <td>${day[currency]}</td>
+                </tr>
+            `;
+        }
+
+        html += `</table>`;
+    }
+
+    html += `
+        <h4>${t("chart")}</h4>
+        <canvas id="currencyChart"></canvas>
+    `;
+
+    container.innerHTML = html;
+
+    renderChart(data);
+}
+
+let chartInstance = null;
+
+function renderChart(data) {
+
+    const ctx = document.getElementById("currencyChart");
+
+    if (!ctx) return;
+
+    const dates = Object.keys(data.dailyRates);
+
+    const currencies = new Set();
+
+    for (const date of dates) {
+        for (const c in data.dailyRates[date]) {
+            currencies.add(c);
+        }
+    }
+
+    const datasets = [];
+
+    for (const currency of currencies) {
+
+        const values = dates.map(date => {
+            return data.dailyRates[date][currency] ?? null;
+        });
+
+        datasets.push({
+            label: currency,
+            data: values,
+            borderWidth: 2,
+            tension: 0.3
+        });
+    }
+
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: dates,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: "top"
+                }
+            }
+        }
+    });
+}
+
+async function saveSettings() {
+
+    const settings = {
+
+        baseCurrency:
+            document.getElementById("baseCurrency").value,
+
+        selectedCurrencies:
+            [...document.querySelectorAll("#currencyList input:checked")]
+                .map(el => el.value),
+
+        timeframeBase:
+            document.getElementById("timeframeBase").value,
+
+        timeframeCurrencies:
+            [...document.querySelectorAll("#timeframeCurrencies input:checked")]
+                .map(el => el.value),
+
+        startDate:
+            document.getElementById("start").value,
+
+        endDate:
+            document.getElementById("end").value
+    };
+
+    await fetch("/api/settings", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
+
+    alert("Nastavení uloženo");
+}
+
+async function loadSettings() {
+
+    const res = await fetch("/api/settings");
+    const settings = await res.json();
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    document.getElementById("baseCurrency").value =
+        settings.baseCurrency || "EUR";
+
+    document.getElementById("timeframeBase").value =
+        settings.timeframeBase || "EUR";
+
+    document.getElementById("start").value =
+        settings.startDate || "";
+
+    document.getElementById("end").value =
+        settings.endDate || "";
+
+    setChecked(
+        "#currencyList",
+        settings.selectedCurrencies || []
+    );
+
+    setChecked(
+        "#timeframeCurrencies",
+        settings.timeframeCurrencies || []
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    await loadData();
+}
+
+function setChecked(containerSelector, values) {
+
+    const checkboxes =
+        document.querySelectorAll(
+            `${containerSelector} input`
+        );
+
+    checkboxes.forEach(cb => {
+        cb.checked =
+            Array.isArray(values) &&
+            values.includes(cb.value);
+    });
+}
+
+async function refreshUI() {
+    applyLanguage();
+
+    const checked =
+        [...document.querySelectorAll("#currencyList input:checked")];
+
+    if (checked.length > 0) {
+        await loadData();
+    }
+}
+
+async function saveCalculation(data) {
+
+    const start = document.getElementById("start").value;
+    const end = document.getElementById("end").value;
+    const base = document.getElementById("timeframeBase").value;
+
+    if (!start || !end || !base || !data?.dailyRates) {
+        return;
+    }
+
+    const record = {
+        base: base,
+        startDate: start,
+        endDate: end,
+        dailyRates: data.dailyRates
+    };
+
+    await fetch("/api/history/save", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(record)
+    });
+
+    console.log("Analýza automaticky uložena");
+}
+
+async function saveCurrentAnalysis(data) {
+
+    const base =
+        document.getElementById("baseCurrency").value;
+
+    const selectedCurrencies =
+        [...document.querySelectorAll("#currencyList input:checked")]
+            .map(el => el.value);
+
+    if (!base || selectedCurrencies.length === 0 || !data) {
+        return;
+    }
+
+    const calculations = {};
+
+    for (const currency of selectedCurrencies) {
+
+        const finalValue = data.rates[currency];
+
+        const baseSourceValue =
+            data.sourceRates[base];
+
+        const targetSourceValue =
+            data.sourceRates[currency];
+
+        calculations[currency] = {
+            sourceToBase:
+                `USD → ${base} = ${baseSourceValue}`,
+
+            sourceToTarget:
+                `USD → ${currency} = ${targetSourceValue}`,
+
+            finalCalculation:
+                `${currency} / ${base} = ${finalValue}`
+        };
+    }
+
+    const record = {
+        source: "USD",
+        base: base,
+        selectedCurrencies: selectedCurrencies,
+
+        calculations: calculations,
+
+        strongestCurrency: data.strongestCurrency,
+        strongestValue: data.strongestValue,
+
+        weakestCurrency: data.weakestCurrency,
+        weakestValue: data.weakestValue
+    };
+
+    await fetch("/api/current-analysis/save", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(record)
+    });
+
+    console.log("current-analysis.json saved");
 }

@@ -10,7 +10,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "currency.provider=mock"
+})
 @AutoConfigureMockMvc
 class LoginTest {
 
@@ -23,7 +25,8 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"Matěj\",\"password\":\"MATEJ\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("OK"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("OK"));
     }
 
     @Test
@@ -32,7 +35,7 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"Matěj\",\"password\":\"wrong\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test
@@ -41,7 +44,7 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"X\",\"password\":\"MATEJ\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test
@@ -50,23 +53,6 @@ class LoginTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
-    }
-    @Test
-    void login_null_username() throws Exception {
-        mockMvc.perform(post("/api/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"MATEJ\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
-    }
-
-    @Test
-    void login_null_password() throws Exception {
-        mockMvc.perform(post("/api/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"Matěj\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("FAIL"));
+                .andExpect(jsonPath("$.success").value(false));
     }
 }

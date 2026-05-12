@@ -6,11 +6,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
-        "EXCHANGE_API_KEY=dummy"
+        "currency.provider=mock"
 })
 @AutoConfigureMockMvc
 class CurrencyControllerTest {
@@ -19,22 +20,39 @@ class CurrencyControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    void rates_endpoint_works() throws Exception {
-        mockMvc.perform(get("/api/currency/rates"))
+    void analyze_works() throws Exception {
+        mockMvc.perform(get("/api/currency/analyze")
+                        .param("base", "EUR")
+                        .param("currencies", "USD,CZK"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void timeframe_endpoint_works() throws Exception {
+    void currencies_works() throws Exception {
+        mockMvc.perform(get("/api/currency/currencies"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void timeframe_works() throws Exception {
         mockMvc.perform(get("/api/currency/timeframe")
-                        .param("start_date", "2024-01-01")
-                        .param("end_date", "2024-01-10"))
+                        .param("base", "EUR")
+                        .param("startDate", "2024-01-01")
+                        .param("endDate", "2024-01-10")
+                        .param("currencies", "USD,CZK"))
                 .andExpect(status().isOk());
     }
 
+
     @Test
-    void shouldFailWithoutParams() throws Exception {
-        mockMvc.perform(get("/api/currency/timeframe"))
+    void timeframe_missing_base_should_fail() throws Exception {
+        mockMvc.perform(get("/api/currency/timeframe")
+                        .param("startDate", "2024-01-01")
+                        .param("endDate", "2024-01-10")
+                        .param("currencies", "USD,CZK"))
                 .andExpect(status().is4xxClientError());
     }
+
+
+
 }
