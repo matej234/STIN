@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class ErrorLogService {
@@ -25,14 +28,29 @@ public class ErrorLogService {
 
             file.getParentFile().mkdirs();
 
-            ErrorLog log = new ErrorLog(
+            ErrorLog newLog = new ErrorLog(
                     LocalDateTime.now().toString(),
                     type,
                     message
             );
 
+            List<ErrorLog> logs = new ArrayList<>();
+
+            if (file.exists() && file.length() > 0) {
+                logs = Arrays.asList(
+                        mapper.readValue(
+                                file,
+                                ErrorLog[].class
+                        )
+                );
+
+                logs = new ArrayList<>(logs);
+            }
+
+            logs.add(newLog);
+
             mapper.writerWithDefaultPrettyPrinter()
-                    .writeValue(file, log);
+                    .writeValue(file, logs);
 
         } catch (IOException e) {
             throw new RuntimeException(

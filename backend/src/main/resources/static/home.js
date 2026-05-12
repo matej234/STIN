@@ -394,8 +394,12 @@ function setChecked(containerSelector, values) {
 async function refreshUI() {
     applyLanguage();
 
-    await loadData();
-    await loadTimeframe();
+    const checked =
+        [...document.querySelectorAll("#currencyList input:checked")];
+
+    if (checked.length > 0) {
+        await loadData();
+    }
 }
 
 async function saveCalculation(data) {
