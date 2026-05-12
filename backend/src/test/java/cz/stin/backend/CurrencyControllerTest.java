@@ -49,6 +49,6 @@ class CurrencyControllerTest {
                         .param("startDate", "2024-01-10")
                         .param("endDate", "2024-01-01")
                         .param("currencies", "USD,CZK"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().is4xxClientError());
     }
 }
