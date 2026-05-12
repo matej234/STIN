@@ -157,4 +157,18 @@ public class CurrencyServiceTests {
 
         assertTrue(res.dailyRates.values().stream().allMatch(Map::isEmpty));
     }
+
+    @Test
+    void analyze_timeframe_should_fail_when_start_after_end() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.analyzeTimeframe(
+                        mockTimeframeData(),
+                        "EUR",
+                        List.of("USD", "CZK"),
+                        "2024-01-10",
+                        "2024-01-01"
+                )
+        );
+    }
 }
