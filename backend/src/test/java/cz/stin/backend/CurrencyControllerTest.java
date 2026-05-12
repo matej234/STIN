@@ -43,4 +43,16 @@ class CurrencyControllerTest {
                 .andExpect(status().isOk());
     }
 
+
+    @Test
+    void timeframe_missing_base_should_fail() throws Exception {
+        mockMvc.perform(get("/api/currency/timeframe")
+                        .param("startDate", "2024-01-01")
+                        .param("endDate", "2024-01-10")
+                        .param("currencies", "USD,CZK"))
+                .andExpect(status().is4xxClientError());
+    }
+
+
+
 }

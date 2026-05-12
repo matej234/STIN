@@ -11,31 +11,42 @@ import java.nio.file.Path;
 public class ApiCacheService {
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private final String ratesPath;
+    private final String timeframePath;
 
+    public ApiCacheService() {
+        this.ratesPath =
+                "/home/site/wwwroot/backend/data/latest-rates.json";
+
+        this.timeframePath =
+                "/home/site/wwwroot/backend/data/latest-timeframe.json";
+    }
+
+    public ApiCacheService(
+            String ratesPath,
+            String timeframePath
+    ) {
+        this.ratesPath = ratesPath;
+        this.timeframePath = timeframePath;
+    }
     public void saveRates(CurrencyApiResponse data) {
-        save(
-                "/home/site/wwwroot/backend/data/latest-rates.json",
-                data
-        );
+        save(ratesPath, data);
     }
 
     public void saveTimeframe(CurrencyTimeframeApiResponse data) {
-        save(
-                "/home/site/wwwroot/backend/data/latest-timeframe.json",
-                data
-        );
+        save(timeframePath, data);
     }
 
     public CurrencyApiResponse loadRates() {
         return load(
-                "/home/site/wwwroot/backend/data/latest-rates.json",
+                ratesPath,
                 CurrencyApiResponse.class
         );
     }
 
     public CurrencyTimeframeApiResponse loadTimeframe() {
         return load(
-                "/home/site/wwwroot/backend/data/latest-timeframe.json",
+                timeframePath,
                 CurrencyTimeframeApiResponse.class
         );
     }
