@@ -374,7 +374,6 @@ async function loadSettings() {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     await loadData();
-    await loadTimeframe();
 }
 
 function setChecked(containerSelector, values) {
