@@ -94,14 +94,15 @@ public class CurrencyServiceTests {
     }
 
     @Test
-    void analyze_should_return_empty_rates_when_list_empty() {
-        CurrencyResponse res = service.analyze(
-                mockApi(),
-                "EUR",
-                List.of()
+    void analyze_should_fail_when_list_empty() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.analyze(
+                        mockApi(),
+                        "EUR",
+                        List.of()
+                )
         );
-
-        assertTrue(res.rates.isEmpty());
     }
 
     @Test
