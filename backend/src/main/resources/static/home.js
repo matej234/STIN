@@ -75,6 +75,13 @@ async function loadData() {
             .map(el => el.value);
 
     if (!base || selected.length === 0) {
+        await fetch(
+            "/api/error-log?type=VALIDATION_ERROR&message=At least one currency must be selected",
+            {
+                method: "POST"
+            }
+        );
+
         alert("At least one currency must be selected");
         return;
     }
@@ -149,6 +156,13 @@ async function loadTimeframe() {
         .map(el => el.value);
 
     if (!start || !end || !base || selected.length === 0) {
+        await fetch(
+            "/api/error-log?type=VALIDATION_ERROR&message=Please fill all fields and select at least one currency",
+            {
+                method: "POST"
+            }
+        );
+
         alert("Please fill all fields and select at least one currency");
         return;
     }
