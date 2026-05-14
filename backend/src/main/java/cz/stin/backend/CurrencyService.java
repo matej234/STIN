@@ -36,7 +36,10 @@ public class CurrencyService {
 
         for (String currency : selectedCurrencies) {
 
-            currency = currency.trim();
+            currency = currency
+                    .trim()
+                    .replaceAll("\\s+", "")
+                    .toUpperCase(Locale.ROOT);
 
             if (!AllowedCurrencies.LIST.contains(currency)) {
                 continue;
