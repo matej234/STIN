@@ -478,7 +478,7 @@ async function saveCurrentAnalysis(data) {
                 `USD → ${currency} = ${targetSourceValue}`,
 
             finalCalculation:
-                `${currency} / ${base} = ${finalValue}`
+                `${base} = ${finalValue} ${currency}`
         };
     }
 
