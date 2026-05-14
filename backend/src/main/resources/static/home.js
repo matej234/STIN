@@ -96,6 +96,8 @@ async function loadData() {
         return;
     }
 
+    console.log(await res.clone().json());
+
     cachedAnalyzeData = await res.json();
 
     renderAnalyze(cachedAnalyzeData);
