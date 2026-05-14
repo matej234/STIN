@@ -86,19 +86,17 @@ async function loadData() {
         return;
     }
 
-    if (!cachedAnalyzeData) {
-        const res = await fetch(
-            `/api/currency/analyze?base=${base}&currencies=${selected.join(",")}`
-        );
+    const res = await fetch(
+        `/api/currency/analyze?base=${base}&currencies=${selected.join(",")}`
+    );
 
-        if (!res.ok) {
-            const errorMessage = await res.text();
-            alert(errorMessage);
-            return;
-        }
-
-        cachedAnalyzeData = await res.json();
+    if (!res.ok) {
+        const errorMessage = await res.text();
+        alert(errorMessage);
+        return;
     }
+
+    cachedAnalyzeData = await res.json();
 
     renderAnalyze(cachedAnalyzeData);
 
