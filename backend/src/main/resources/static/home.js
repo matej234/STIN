@@ -458,13 +458,14 @@ async function saveCurrentAnalysis(data) {
 
     for (const currency in data.rates) {
 
-        const finalValue = data.rates[currency];
-
         const baseSourceValue =
             data.sourceRates[base];
 
         const targetSourceValue =
             data.sourceRates[currency];
+
+        const finalValue =
+            (targetSourceValue / baseSourceValue).toFixed(4);
 
         calculations[currency] = {
             sourceToBase:
@@ -499,4 +500,4 @@ async function saveCurrentAnalysis(data) {
         },
         body: JSON.stringify(record)
     });
-}}
+}
