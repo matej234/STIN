@@ -450,17 +450,13 @@ async function saveCurrentAnalysis(data) {
     const base =
         document.getElementById("baseCurrency").value;
 
-    const selectedCurrencies =
-        [...document.querySelectorAll("#currencyList input:checked")]
-            .map(el => el.value);
-
-    if (!base || selectedCurrencies.length === 0 || !data) {
+    if (!base || !data || !data.rates) {
         return;
     }
 
     const calculations = {};
 
-    for (const currency of selectedCurrencies) {
+    for (const currency in data.rates) {
 
         const finalValue = data.rates[currency];
 
@@ -472,20 +468,20 @@ async function saveCurrentAnalysis(data) {
 
         calculations[currency] = {
             sourceToBase:
-                `USD → ${base} = ${baseSourceValue}`,
+                `${data.source} → ${base} = ${baseSourceValue}`,
 
             sourceToTarget:
-                `USD → ${currency} = ${targetSourceValue}`,
+                `${data.source} → ${currency} = ${targetSourceValue}`,
 
             finalCalculation:
-                `${base} = ${finalValue} ${currency}`
+                `1 ${base} = ${finalValue} ${currency}`
         };
     }
 
     const record = {
-        source: "USD",
+        source: data.source,
         base: base,
-        selectedCurrencies: selectedCurrencies,
+        selectedCurrencies: Object.keys(data.rates),
 
         calculations: calculations,
 
@@ -503,6 +499,4 @@ async function saveCurrentAnalysis(data) {
         },
         body: JSON.stringify(record)
     });
-
-    console.log("current-analysis.json saved");
-}
+}}
